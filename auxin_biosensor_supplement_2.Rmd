@@ -1,0 +1,1964 @@
+---
+title: "Supplmental reproducible analysis for: Genetically encoded, noise-tolerant,
+  auxin biosensors in yeast facilitate metabolic engineering and directed evolution"
+author:
+- "Patarasuda Chaisupa^[Biological Systems Engineering, Virginia Tech, Blacksburg,
+  VA , USA, co-first author]"
+- "Mahbubur Rahman*^[Biological Systems Engineering, Virginia Tech, Blacksburg, VA,
+  USA, co-first author]"
+- Sherry B. Hildreth^[Fralin Life Sciences Institute, Virginia Tech, Blacksburg, VA,
+  USA]
+- Saede Moseley^[Biological Systems Engineering, Virginia Tech, Blacksburg, VA, USA]
+- Chauncey Gatling^[Biological Systems Engineering, Virginia Tech, Blacksburg, VA,
+  USA]
+- Richard F. Helm^[Biochemistry and Fralin Life Sciences Institute, Virginia Tech,
+  Blacksburg, VA, USA]
+- R. Clay Wright^[Biological Systems Engineering, Fralin Life Sciences Institute,
+  and Translational Plant Sciences Center, Virginia Tech, Blacksburg, VA, USA, wrightrc@vt.edu]
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+  html_notebook: default
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, 
+                      tidy = TRUE, message = FALSE, 
+                      warning = FALSE)
+library(flowCore)
+library(flowTime)
+library(ggplot2)
+library(stringr)                        
+library(ggridges)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(drc)
+library(gridExtra)
+library(openCyto)
+library(ggcyto)
+library(flowStats)
+library(flowClust)
+library(wesanderson)
+library(patchwork)
+library(ggthemes)
+library(agricolae)
+```
+
+# Time-course response and ratiometric measurement of the single-fusion biosensors
+
+## Time-course degradation
+
+```{r, eval=FALSE}
+# Read in flow sets from 20200611 and 20200614
+flowSet <- read.plateSet(path = "~/Google Drive/Shared drives/PlantSynBioLab/Data/Mahbub/FlowSets/", pattern = "202006", phenoData = "annotation.txt")
+flowSet <- flowSet[which(flowSet@phenoData@data$strain %in% c("T1T1", "A2A2"))]
+
+write.flowSet(flowSet, "flowSets/single-time-course")
+
+```
+
+
+```{r}
+flowSet <- read.flowSet(path =  "flowSets/single-time-course", phenoData = "annotation.txt")
+# load gates for this strain/cytometer
+load("PSB_Accuri_W303.RData")
+data_sum <- summarizeFlow(flowset = flowSet, ploidy = "diploid", only = "singlets")
+time0_14 <- data_sum %>% dplyr::filter(name == "21D10.fcs") %>% 
+  pull(btime) 
+time0_11 <- data_sum %>% dplyr::filter(name == "11G02.fcs") %>% 
+  pull(btime) 
+data_sum <- 
+  data_sum %>% 
+    mutate(time = case_when(
+      folder == "20200611_AFB_epistasis" ~ 
+        .$btime - time0_11, 
+      folder == "20200614_AFB_epistasis" ~
+        .$btime - time0_14
+    ))
+```
+
+```{r}
+shapes <- c("DMSO" = 1, "IAA" = 16)
+lines <- c("DMSO" = 2, "IAA" = 1)
+
+data_sum$ratio <- data_sum$FL1.Amean/data_sum$FL4.Amean
+data_sum$Venus <- data_sum$FL1.Amean/10000
+data_sum_long <- data_sum %>% 
+  dplyr::select(time, treatment, yWL, folder, strain, ratio, Venus) %>%
+  pivot_longer(cols = c(ratio, Venus), names_to = "parameter")
+deg_plot <- ggplot(data = subset(data_sum_long, yWL == "166"), 
+       aes(x = time, y = value, shape = treatment, 
+           color = treatment, 
+           group = interaction(treatment, folder))) + 
+  geom_point() + labs(y = "intensity (AU)", x = "time post auxin addition (min)") +
+  facet_wrap(~fct_rev(parameter), scales = "free") + 
+  scale_shape_manual(values = shapes) + 
+  geom_line(aes(linetype = treatment)) +
+  scale_linetype_manual(values = lines) + 
+  scale_color_viridis_d(option = "D", end = 0.75, direction = -1) + 
+  theme_test()
+deg_plot
+```
+
+```{r}
+data <- flowTime::tidyFlow(flowSet, ploidy = "diploid", only = "singlets")
+```
+
+```{r}
+# get late time points for one strain
+last_reading <- 
+  tail(unique(data[which(data$yWL == 166), "name"]),4) %>% head(2)
+data <- dplyr::filter(data, yWL == "166" & name %in% last_reading)
+# clean this up, cut off zeros
+data <- subset(data, FL1.A >1 & FL4.A > 1)
+data$FLratio <- data$FL1.A/data$FL4.A
+range(data$FL1.A)
+#calculate cvs
+sd(data$FLratio)/mean(data$FLratio)
+range(data$FLratio)
+```
+
+## Single-fusion CV plot 
+
+```{r}
+#calculate normalized values
+data$Venus <- data$FL1.A / median(data$FL1.A)
+data$mScarlet <- data$FL4.A / median(data$FL4.A)
+data$ratio <- data$FLratio / median(data$FLratio)
+# make a tidy, long dataset 
+data_long <- data %>% 
+  dplyr::select(treatment, Venus, mScarlet, ratio) %>%
+  pivot_longer(cols = c(Venus, mScarlet, ratio), 
+               names_to = "parameter", 
+               values_to = "value") 
+
+# need to also format CVs approriately for annotating
+cv <- function(x) return(round(sd(x)/mean(x),2))
+CVs <- data %>% group_by(treatment) %>%
+  summarise(across(where(is_double), cv))
+CVs <- CVs %>% dplyr::select(treatment, Venus, mScarlet, ratio) %>%
+    pivot_longer(cols = c(Venus, mScarlet, ratio), 
+               names_to = "parameter", 
+               values_to = "value")
+
+CV_plot <- ggplot(data = data_long, 
+       mapping = aes(x = value, 
+                     color = treatment)) + 
+  geom_density() + coord_cartesian(x = c(0,2)) + 
+  labs(x = "median normalized intensity", color = "treatment") + 
+  facet_grid(fct_relevel(parameter, "Venus")~.) + theme_test() + 
+  geom_text(data = subset(CVs, treatment == "IAA"), 
+             aes(label = paste0("CV = ", value)),
+             x = 0.3, y = 2) + 
+  geom_text(data = subset(CVs, treatment == "DMSO"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 1.8, y = 2) + 
+  scale_color_viridis_d(option = "D", end = .75, direction = -1)
+CV_plot
+```
+
+```{r}
+layout <- "
+AAAAB
+CCCCC
+"
+CV_plot  + guide_area() + deg_plot + plot_annotation(tag_levels = "A") + 
+  plot_layout(guides = "collect", heights = c(5, 2), design = layout) 
+ggsave("ratio-deg.pdf", width = 5, height = 5)
+ggsave("ratio-deg.png", width = 5, height = 5)
+```
+
+# Dose-response curves of dual-fusion AFB2 and TIR1 biosensors
+
+## AFB2-based biosensor (yWL210 AFB2 dual-fusion, single ratiometric construct)
+
+```{r, eval = F}
+plate_all_210 <- read.plateSet(path = "~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Does-response assay/11212022_DRA_overlaydata/Combine Data_yWL210/All data/", pattern = "DRA-*") 
+```
+
+```{r, eval = F}
+
+annotation <- createAnnotation(yourFlowSet = plate_all_210)
+write.csv(annotation,'/Users/patchaisupa/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Does-response assay/11212022_DRA_overlaydata/overlaydata_annotation_yWL210_datagated_exJan31.csv')
+
+```
+
+```{r, eval = F}
+annotation <-
+  read.csv(
+    '~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Does-response assay/11212022_DRA_overlaydata/overlaydata_annotation_yWL210_datagated_exJan31.csv'
+  )
+
+aplate_all_210 <-
+  annotateFlowSet(yourFlowSet = plate_all_210,
+                  annotation_df = annotation,
+                  mergeBy = 'name')
+head(rownames(pData(aplate_all_210)))
+head(pData(aplate_all_210))
+write.flowSet(aplate_all_210, 
+              outdir = "flowSets/AFB2-dual-yWL210-dose-response")
+```
+
+```{r}
+aplate_all_210 <-
+  read.flowSet(path = "flowSets/AFB2-dual-yWL210-dose-response", 
+               phenoData = "annotation.txt")
+
+plate_all_210_sum <-
+  summarizeFlow(aplate_all_210, channel = NA, gated = TRUE)
+```
+
+###Dose-response curve
+
+#### Comparing log-logistic and Weibull models
+(Figure 2 in Ritz (2009))
+```{r}
+fitdrc.m1 <-
+  drm(YL1.Amean / BL1.Amean ~ dose, data = plate_all_210_sum, fct = LL.4())
+fitdrc.m2 <-
+ drm(YL1.Amean / BL1.Amean ~ dose, data = plate_all_210_sum, fct = W1.4())
+#fitdrc.m3 <- 
+# drm(YL1.Amean/BL1.Amean~dose, data=plate_all_210_sum, fct = W2.4())
+#Error in drmOpt(opfct, opdfct1, startVecSc, optMethod, constrained, warnVal, :
+#Convergence failed
+
+summary(fitdrc.m1)
+summary(fitdrc.m2)
+#summary(fitdrc.m3)
+```
+
+The 4-parameter log-logistic model has a slightly lower residual standard error. 
+
+```{r}
+model.LL4_all_210 <-
+  drm(YL1.Amean / BL1.Amean ~ dose,
+      data = plate_all_210_sum,
+      fct = LL.4(names = c(
+        "Slope", "Lower Limit", "Upper Limit", "ED50"
+      )))
+plot(
+  model.LL4_all_210,
+  broken = TRUE,
+  type = "none",
+  lty = 1,
+  lwd = 5,
+  xlab = "Extracellular IAA concentration (µM)",
+  ylab = "Response Signal"
+)
+#plot(model.LL4_all_210, broken = TRUE, col = "black", add=TRUE)
+plot(
+  model.LL4_all_210,
+  broken = TRUE,
+  type = "confidence",
+  col = "black",
+  add = TRUE
+)
+summary(model.LL4_all_210)
+
+```
+### Individual replicate dose-response curves
+
+```{r}
+replicate1_210 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(plate_all_210_sum, replicate == "1"),
+    fct = LL.4()
+  )
+replicate2_210 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(plate_all_210_sum, replicate == "2"),
+    fct = LL.4()
+  )
+replicate3_210 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(plate_all_210_sum, replicate == "3"),
+    fct = LL.4()
+  )
+replicate4_210 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(plate_all_210_sum, replicate == "4"),
+    fct = LL.4()
+  )
+replicate5_210 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(plate_all_210_sum, replicate == "5"),
+    fct = LL.4()
+  )
+replicate6_210 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(plate_all_210_sum, replicate == "6"),
+    fct = LL.4()
+  )
+replicate7_210 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(plate_all_210_sum, replicate == "7"),
+    fct = LL.4()
+  )
+
+plot(
+  replicate1_210,
+  broken = TRUE,
+  type = "all",
+  col = "dark green",
+  lty = 2
+)
+plot(
+  replicate2_210,
+  broken = TRUE,
+  add = TRUE,
+  type = "all",
+  col = "dark blue",
+  lty = 2
+)
+plot(
+  replicate3_210,
+  broken = TRUE,
+  add = TRUE,
+  type = "all",
+  col = "yellow",
+  lty = 2
+)
+plot(
+  replicate4_210,
+  broken = TRUE,
+  add = TRUE,
+  type = "all",
+  col = "dark grey",
+  lty = 2
+)
+plot(
+  replicate5_210,
+  broken = TRUE,
+  add = TRUE,
+  type = "all",
+  col = "dark orange",
+  lty = 2
+)
+plot(
+  replicate6_210,
+  broken = TRUE,
+  add = TRUE,
+  type = "all",
+  col = "brown",
+  lty = 2
+)
+plot(
+  replicate7_210,
+  broken = TRUE,
+  add = TRUE,
+  type = "all",
+  col = "dark red",
+  lty = 2
+)
+plot(
+  model.LL4_all_210,
+  broken = TRUE,
+  add = TRUE,
+  type = "none",
+  lty = 1,
+  lwd = 5,
+  xlab = "Extracellular IAA concentration (µM)",
+  ylab = "Response Signal"
+)
+#plot(model.LL4_all_210, broken = TRUE, col = "black", add=TRUE)
+plot(
+  model.LL4_all_210,
+  broken = TRUE,
+  type = "confidence",
+  col = "black",
+  add = TRUE
+)
+
+```
+
+## TIR1-based biosensor (yWL209 TIR dual-fusion, single ratiometric construct)
+
+```{r, eval = F}
+plate_all_209 <-
+  read.plateSet(path = "~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Does-response assay/11212022_DRA_overlaydata/Combine Data_yWL209/", pattern = "DRA-*") 
+```
+
+```{r, eval = F}
+annotation <- createAnnotation(yourFlowSet = plate_all_209)
+write.csv(
+  annotation,
+  '/Users/patchaisupa/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Does-response assay/11212022_DRA_overlaydata/overlaydata_annotation_yWL209.csv'
+)
+```
+
+```{r, eval = F}
+annotation <-
+  read.csv(
+    '~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Does-response assay/11212022_DRA_overlaydata/overlaydata_annotation_yWL209.csv'
+  )
+
+aplate_all_209 <-
+  annotateFlowSet(yourFlowSet = plate_all_209,
+                  annotation_df = annotation,
+                  mergeBy = 'name')
+head(rownames(pData(aplate_all_209)))
+head(pData(aplate_all_209))
+
+write.flowSet(aplate_all_209, outdir = "flowSets/TIR1-dual-yWL209-dose-response")
+```
+
+```{r}
+aplate_all_209 <-
+  read.flowSet(path = "flowSets/TIR1-dual-yWL209-dose-response", 
+               phenoData = "annotation.txt")
+
+dat_sum_overlaydata_209 <-
+  summarizeFlow(aplate_all_209, gated = TRUE)
+```
+###Dose-response curve
+```{r}
+model.LL4_rep1_209 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(dat_sum_overlaydata_209, replicate == "1"),
+    fct = LL.4(names = c(
+      "Slope", "Lower Limit", "Upper Limit", "ED50"
+    ))
+  )
+plot(
+  model.LL4_rep1_209,
+  type = "all",
+  col = "red",
+  lty = 1,
+  lwd = 2,
+  xlab = "Extracellular IAA concentration (µM)",
+  ylab = "Red/Green Fluorescent Ratio"
+)
+plot(
+  model.LL4_rep1_209,
+  broken = TRUE,
+  type = "confidence",
+  col = "red",
+  add = TRUE
+)
+print(summary(model.LL4_rep1_209))
+
+
+model.LL4_rep2_209 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(dat_sum_overlaydata_209, replicate == "2"),
+    fct = LL.4(names = c(
+      "Slope", "Lower Limit", "Upper Limit", "ED50"
+    ))
+  )
+plot(
+  model.LL4_rep2_209,
+  type = "all",
+  col = "blue",
+  lty = 1,
+  lwd = 2,
+  xlab = "Extracellular IAA concentration (µM)",
+  ylab = "Red/Green Fluorescent Ratio"
+)
+plot(
+  model.LL4_rep2_209,
+  broken = TRUE,
+  type = "confidence",
+  col = "blue",
+  add = TRUE
+)
+print(summary(model.LL4_rep2_209))
+
+
+model.LL4_rep3_209 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(dat_sum_overlaydata_209, replicate == "3"),
+    fct = LL.4(names = c(
+      "Slope", "Lower Limit", "Upper Limit", "ED50"
+    ))
+  )
+plot(
+  model.LL4_rep3_209,
+  type = "all",
+  col = "dark green",
+  lty = 1,
+  lwd = 2,
+  xlab = "Extracellular IAA concentration (µM)",
+  ylab = "Red/Green Fluorescent Ratio"
+)
+plot(
+  model.LL4_rep3_209,
+  broken = TRUE,
+  type = "confidence",
+  col = "dark green",
+  add = TRUE
+)
+
+print(summary(model.LL4_rep3_209))
+
+
+
+model.LL4_all_209 <-
+  drm(YL1.Amean / BL1.Amean ~ dose,
+      data = dat_sum_overlaydata_209,
+      fct = LL.4(names = c(
+        "Slope", "Lower Limit", "Upper Limit", "ED50"
+      )))
+plot(
+  model.LL4_all_209,
+  type = "all",
+  col = "black",
+  lty = 1,
+  lwd = 3
+)
+plot(
+  model.LL4_all_209,
+  broken = TRUE,
+  col = "black",
+  add = TRUE
+)
+plot(
+  model.LL4_all_209,
+  broken = TRUE,
+  type = "confidence",
+  col = "black",
+  add = TRUE
+)
+print(summary(model.LL4_all_209))
+
+replicate1_209 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(dat_sum_overlaydata_209, replicate == "1"),
+    fct = LL.4()
+  )
+replicate2_209 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(dat_sum_overlaydata_209, replicate == "2"),
+    fct = LL.4()
+  )
+replicate3_209 <-
+  drm(
+    YL1.Amean / BL1.Amean ~ dose,
+    data = subset(dat_sum_overlaydata_209, replicate == "3"),
+    fct = LL.4()
+  )
+
+
+plot(
+  replicate1_209,
+  broken = TRUE,
+  add = TRUE,
+  type = "none",
+  col = "red",
+  lty = 2
+)
+plot(
+  replicate2_209,
+  broken = TRUE,
+  add = TRUE,
+  type = "none",
+  col = "blue",
+  lty = 2
+)
+plot(
+  replicate3_209,
+  broken = TRUE,
+  add = TRUE,
+  type = "none",
+  col = "dark green",
+  lty = 2
+)
+
+```
+
+## Combined Dose-response curveswith ggplot
+
+```{r}
+pm210 <-
+  expand.grid(treatment = exp(seq(log(1e-5), log(1e2), length = 1000)))
+pm210 <-
+  cbind(pm210,
+        predict(model.LL4_all_210, newdata = pm210, interval = "confidence"))  
+
+plot210 <-
+  ggplot(plate_all_210_sum, aes(x = dose, y = YL1.Amean / BL1.Amean))  + 
+  scale_x_log10() + geom_ribbon(
+    data = pm210,
+    aes(
+      x = treatment,
+      y = Prediction,
+      ymin = Lower,
+      ymax = Upper
+    ),
+    alpha = 0.4
+  ) + geom_line(data = pm210,
+                aes(x = treatment, y = Prediction),
+                linewidth = 1.2) + ylab("mScarlet-I/Venus") + xlab("Auxin (IAA, µM)") + 
+  scale_x_log10(labels = 
+                  scales::label_number(drop0trailing = TRUE)) +  
+  scale_color_viridis_c() +
+  geom_point(aes(color = replicate), size = 1, alpha = 0.6) + 
+  theme_classic() + 
+  theme(legend.position = "none", 
+        plot.title = element_text(hjust = 0.5),
+        plot.title.position = "plot") + 
+  ggtitle("AFB2")  
+plot210
+
+
+pm209 <-
+  expand.grid(treatment = exp(seq(log(1e-5), log(1e2), length = 1000)))
+pm209 <-
+  cbind(pm209,
+        predict(model.LL4_all_209, newdata = pm209, interval = "confidence"))
+
+plot209 <-
+  ggplot(dat_sum_overlaydata_209, aes(x = dose, y = YL1.Amean / BL1.Amean))  + 
+  scale_x_log10() + geom_ribbon(
+    data = pm209,
+    aes(
+      x = treatment,
+      y = Prediction,
+      ymin = Lower,
+      ymax = Upper
+    ),
+    alpha = 0.4
+  ) + geom_line(data = pm209,
+                aes(x = treatment, y = Prediction),
+                linewidth = 1.2) + 
+  ylab("mScarlet-I/Venus") + 
+  xlab("Auxin (IAA, µM)") + 
+  scale_x_log10(labels = 
+                  scales::label_number(drop0trailing = TRUE)) + 
+  scale_color_viridis_c() +
+  geom_point(aes(color = replicate), size = 1, alpha = 0.6) +
+  theme_classic() + 
+  theme(legend.position = "none", 
+        plot.title = element_text(hjust = 0.5),
+        plot.title.position = "plot") + 
+  #ylim(0.095, 0.12) + 
+  ggtitle("TIR1")
+plot209
+
+plot210 + plot209 + patchwork::plot_annotation(tag_levels = "A")
+
+ggsave(
+  plot = plot210 + plot209 + patchwork::plot_annotation(tag_levels = "A"),
+  filename = "dose-response.pdf",
+  width = 6,
+  height = 3
+)
+ggsave(
+  plot = plot210 + plot209 + patchwork::plot_annotation(tag_levels = "A"),
+  filename = "dose-response.png",
+  width = 6,
+  height = 3
+)
+```
+
+# LCMS measurements of intracellular auxin
+
+```{r, eval=FALSE}
+plate_08052022 <- read.plateSet(path = "~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Does-response assay/08052022_yWL210_DRA-LCMS-R2/Alldata/", pattern = "DRA*") 
+```
+
+```{r, eval=FALSE}
+annotation <- read.csv('~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Does-response assay/08052022_yWL210_DRA-LCMS-R2/08052022_alldata_annotation.csv')
+
+aplate_08052022 <- annotateFlowSet(yourFlowSet = plate_08052022, annotation_df = annotation, mergeBy = 'name')
+head(rownames(pData(aplate_08052022)))
+head(pData(aplate_08052022))
+write.flowSet(aplate_08052022, "flowSets/AFB2-dual-DR-LCMS")
+```
+```{r}
+aplate_08052022 <- read.flowSet(path = "flowSets/AFB2-dual-DR-LCMS",
+                                phenoData = "annotation.txt")
+plate_08052022_sum <- summarizeFlow(aplate_08052022, gated = TRUE)
+model.LL4_08052022<- drm(YL1.Amean/BL1.Amean~dose, data=subset(plate_08052022_sum, reading =="10"), fct=LL.4(names = c("Slope", "Lower Limit", "Upper Limit", "ED50")))
+summary(model.LL4_08052022)
+pm_08052022 <- expand.grid(treatment=exp(seq(log(1e-3), log(1e2), length=1000))) 
+pm_08052022 <- cbind(pm_08052022,predict(model.LL4_08052022, newdata=pm_08052022, interval="confidence"))  
+
+plot_08052022 <- 
+  ggplot(data=subset(plate_08052022_sum, reading =="10"), 
+         aes(x = dose, y = YL1.Amean/BL1.Amean))  + 
+  geom_ribbon(data = pm_08052022, 
+              aes(x = treatment, y = Prediction, ymin = Lower,
+                  ymax=Upper), alpha=0.4) + 
+  geom_line(data = pm_08052022, 
+            aes(x = treatment, y = Prediction)) + 
+  xlab("Extracellular IAA (µM)") +
+  ylab("AFB2-mScarlet-/Venus-IAA17") + 
+  scale_x_log10(labels = 
+                  scales::label_number(drop0trailing = TRUE)) +  
+  geom_point(color = "black") + 
+  theme_classic(base_size = 12) +
+  theme(legend.position = "none") 
+plot_08052022
+
+LCMSdata <- read.csv('08052022_yWL210_DRA-LCMS_data.csv')
+
+model.LL4_08052022_LCMS<- drm(Observed_IAA_in_uM~Dose_IAA, data=LCMSdata, fct=LL.4(names = c("Slope", "Lower Limit", "Upper Limit", "ED50")))
+summary(model.LL4_08052022_LCMS)
+
+plot(model.LL4_08052022_LCMS, type="all",col="black",lty=1, lwd=3, xlab = "Extracellular concentrations of IAA (uM)", ylab = "Observed IAA (uM)")
+
+pm_08052022_LCMS <- expand.grid(treatment=exp(seq(log(1e-3), log(5e2), length=1000))) 
+pm_08052022_LCMS <- cbind(pm_08052022_LCMS,
+                          predict(model.LL4_08052022_LCMS,
+                                  newdata=pm_08052022_LCMS,
+                                  interval="confidence")) 
+LCMS_intracellular <- 
+ggplot(data = LCMSdata, 
+       mapping = aes(x = Dose_IAA, 
+                     y = Observed_IAA_in_uM)) + 
+  geom_point() + 
+  geom_ribbon(data = pm_08052022_LCMS, 
+              aes(x = treatment, y = Prediction, ymin = Lower,
+                  ymax=Upper), alpha=0.4) + 
+  geom_line(data = pm_08052022_LCMS, 
+            aes(x = treatment, y = Prediction)) +
+  scale_x_log10(labels = 
+                scales::label_number(drop0trailing = TRUE)) +
+  theme_classic(base_size = 13) +
+  theme(legend.position = "none") + 
+  ylab("Intracellular IAA (µM)") + 
+  xlab("Extracellular IAA (µM)")  
+
+plot_08052022 + LCMS_intracellular + 
+  plot_annotation(tag_levels = "A")
+ggsave("LCMS-comparison.pdf", width=6, height = 3)
+ggsave("LCMS-comparison.png", width=6, height = 3)
+```
+
+# Auxin-induced degradation time-course assay for the dual-fusion biosensors in different yeast strains
+
+Two isolated colonies from each strain were selected at random and tested in auxin-induced protein degradation assay. IAA working solution was added to obtain the IAA concentration at 50 µM in each culture. The assay was carried out using ThermoFisher Attune NxT B/Y flow cytometer.
+
+Strains:
+
+-   yWL185 (TIR1 dual-fusion in W303)
+-   yWL186 (AFB2 dual-fusion in W303)
+-   yWL209 (TIR1 dual-fusion in YPH499)
+-   yWL210 (AFB2 dual-fusion in YPH499)
+
+```{r, eval = FALSE}
+plate_03112022 <- read.plateSet(path = "~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Time course assays/03112022_Time-course assay/10readings/onlyPatstrains/", pattern = "TCA*") 
+```
+
+```{r, eval = F}
+annotation <- createAnnotation(yourFlowSet = plate_03112022)
+write.csv(annotation,'~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Time course assays/03112022_Time-course assay/03112022_Time-course assay_10platesPatStrains2.csv')
+```
+
+```{r, eval = F}
+annotation <- read.csv('~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Time course assays/03112022_Time-course assay/03112022_Time-course assay_10platesPatStrains2.csv')
+aplate_03112022 <- annotateFlowSet(yourFlowSet = plate_03112022, annotation_df = annotation, mergeBy = 'name')
+head(rownames(pData(aplate_03112022)))
+head(pData(aplate_03112022))
+
+write.flowSet(aplate_03112022, outdir = "flowSets/dual-time-course")
+```
+
+```{r}
+aplate_03112022 <-
+  read.flowSet(path = "flowSets/dual-time-course/", phenoData = "annotation.txt")
+plate_03112022_sum <- summarizeFlow(aplate_03112022, gated = TRUE)
+
+
+plate_03112022_sum <-
+  plate_03112022_sum %>% mutate(
+    background_p = case_when(
+      strain %in% c("yWL185", "yWL186") ~ "W303",
+      strain %in% c("yWL209", "yWL210") ~ "YPH499"
+    ),
+    receptor_p = case_when(
+      strain %in% c("yWL185", "yWL209") ~ "TIR1",
+      strain %in% c("yWL186", "yWL210") ~ "AFB2"
+    )
+  )
+```
+
+```{r}
+#The time auxin addition is equal to time zero
+time0 <-
+  "303112022-Pat-TCA03_Time-course assay_Auxin_yWL185-C1.fcs"
+# or whatever well was being read when auxin was added
+
+plate_03112022_sum$time <-
+  plate_03112022_sum$btime - 
+  plate_03112022_sum[[which(plate_03112022_sum$name == time0), "btime"]]
+#single bracket -->extracting the all name, 2 brackets extract just single "value" or "values"
+
+```
+
+```{r}
+#To normalize data
+
+plate_03112022_sum <-
+  plate_03112022_sum %>% mutate(ratio = BL1.Amean/YL1.Amean) %>%
+  group_by(background_p, receptor_p) %>% 
+  mutate(normalizedratio = ratio/mean(ratio))
+```
+
+```{r}
+ratio <- 
+  ggplot(data = subset(plate_03112022_sum), 
+         aes(x = time, y = normalizedratio,  
+             group = interaction(factor(colony), factor(treatment)), 
+             linetype =  factor(treatment), shape = factor(treatment), 
+             color = factor(treatment))) +
+  geom_point(aes(color = treatment), size = 2) + 
+  geom_line(aes(color = treatment), linewidth= 1)  + 
+  xlab("Time post auxin addition (min)") + 
+  scale_shape_manual(values = c(19, 1)) + 
+  ylab("Normalized Venus/mScarlet-I") + 
+  facet_grid(background_p~receptor_p) +
+  scale_color_manual(values = c("#5499C7", "#999999")) + 
+  theme_base() + 
+  theme(legend.position = "none", 
+        panel.grid.minor = element_line(linewidth = 0.3, 
+                                        linetype = 'solid', 
+                                        colour = "white"), 
+        axis.line = element_line(colour = "black", 
+                                 linewidth = 1, linetype = "solid")) 
+ratio
+```
+
+Without normalization
+
+```{r}
+ratio_raw <- 
+  ggplot(data = subset(plate_03112022_sum), 
+         aes(x = time, y = ratio,  
+             group = interaction(factor(colony), factor(treatment)), 
+             linetype =  factor(treatment), shape = factor(treatment), 
+             color = factor(treatment))) +
+  geom_point(aes(color = treatment), size = 2) + 
+  geom_line(aes(color = treatment), linewidth= 1)  + 
+  xlab("Time post auxin addition (min)") + 
+  scale_shape_manual(values = c(19, 1)) + 
+  ylab("Venus/mScarlet-I") + 
+  facet_grid(background_p~receptor_p, scales = "free") +
+  scale_color_manual(values = c("#5499C7", "#999999")) + 
+  theme_base() + 
+  theme(legend.position = "none", 
+        panel.grid.minor = element_line(linewidth = 0.3, 
+                                        linetype = 'solid', 
+                                        colour = "white"), 
+        axis.line = element_line(colour = "black", 
+                                 linewidth = 1, linetype = "solid")) 
+ratio_raw
+```
+
+```{r}
+ratio_raw / ratio + plot_annotation(tag_levels = "A") & theme(plot.background = element_blank())
+ggsave("tc-strains.pdf", width = 5, height = 7)
+ggsave("tc-strains.png", width = 5, height = 7)
+```
+
+
+```{r}
+#normalize green and red fluorescent expression
+plate_03112022_sum <-
+  plate_03112022_sum %>% 
+  mutate(green = BL1.Amean) %>%
+  group_by(background_p, receptor_p) %>% 
+  mutate(normalized_Greenexpression = BL1.Amean/mean(BL1.Amean)) %>%
+  mutate(red = YL1.Amean) %>%
+  mutate(normalized_Redexpression = YL1.Amean/mean(YL1.Amean))
+
+normgreen <- qplot(x = time, y = normalized_Greenexpression, data = plate_03112022_sum, group = interaction(factor(colony), factor(treatment)), linetype =  factor(treatment), shape = factor(treatment), color = factor(treatment)) +
+  geom_point(aes(color = treatment), size = 2) + geom_line(aes(color = treatment), linewidth = 1) + xlab("Time post first reading (min)") + scale_shape_manual(values = c(19, 1)) + ylab("Normalized Venus expression")+ facet_grid(receptor_p~background_p) + scale_color_manual(values = c("#F1C40F", "#85929E"))+ theme_minimal() + theme(legend.position = "none", panel.grid.major = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), axis.line = element_line(colour = "black", linewidth = 1, linetype = "solid")) 
+
+normgreen
+
+normred <-qplot(x = time, y = normalized_Redexpression, data = plate_03112022_sum, group = interaction(factor(colony), factor(treatment)), linetype =  factor(treatment), shape = factor(treatment), color = factor(treatment)) +
+  geom_point(aes(color = treatment), size = 2) + geom_line(aes(color = treatment), linewidth = 1) + xlab("Time post first reading (min)") + scale_shape_manual(values = c(19, 1)) + ylab("Normalized mScarlet expression")+ facet_grid(receptor_p~background_p) + scale_color_manual(values = c("#EC7063", "#616A6B")) + theme_minimal() + theme(legend.position = "none", panel.grid.major = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), axis.line = element_line(colour = "black", linewidth = 1, linetype = "solid")) 
+normred 
+
+green <- qplot(x = time, y = BL1.Amean, data = plate_03112022_sum, group = interaction(factor(colony), factor(treatment)), linetype =  factor(treatment), shape = factor(treatment), color = factor(treatment)) +
+  geom_point(aes(color = treatment), size = 2) + geom_line(aes(color = treatment), linewidth = 1) + xlab("Time post first reading (min)") + scale_shape_manual(values = c(19, 1)) + ylab("Normalized Venus expression")+ facet_grid(receptor_p~background_p) + scale_color_manual(values = c("#F1C40F", "#85929E"))+ theme_minimal() + theme(legend.position = "none", panel.grid.major = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), axis.line = element_line(colour = "black", linewidth = 1, linetype = "solid")) 
+green
+
+red <-qplot(x = time, y = YL1.Amean, data = plate_03112022_sum, group = interaction(factor(colony), factor(treatment)), linetype =  factor(treatment), shape = factor(treatment), color = factor(treatment)) +
+  geom_point(aes(color = treatment), size = 2) + geom_line(aes(color = treatment), linewidth = 1) + xlab("Time post first reading (min)") + scale_shape_manual(values = c(19, 1)) + ylab("Normalized mScarlet expression")+ facet_grid(receptor_p~background_p) + scale_color_manual(values = c("#EC7063", "#616A6B")) + theme_minimal() + theme(legend.position = "none", panel.grid.major = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), axis.line = element_line(colour = "black", linewidth = 1, linetype = "solid")) 
+red 
+
+conc <-qplot(x = time, y = conc, data = plate_03112022_sum, group = interaction(factor(colony), factor(treatment)), linetype =  factor(treatment), shape = factor(treatment), color = factor(treatment)) +
+  geom_point(aes(color = treatment), size = 2) + geom_line(aes(color = treatment), linewidth = 1) + xlab("Time post first reading (min)") + scale_shape_manual(values = c(19, 1)) + ylab("Normalized mScarlet expression")+ facet_grid(receptor_p~background_p) + scale_color_manual(values = c("black", "#616A6B")) + theme_minimal() + theme(legend.position = "none", panel.grid.major = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), axis.line = element_line(colour = "black", linewidth = 1, linetype = "solid")) 
+conc 
+```
+
+# CV plot
+
+Using the above time course dataset we can compare coefficients of variation in the individual parameters and the ratio for each of the strains and biosensors at steady state.
+
+## yWL185 (TIR1 dual-fusion, W303 yeast)
+
+```{r}
+
+data185 <- steadyState(aplate_03112022, gated = TRUE)
+data185 <- subset(data185, strain == "yWL185" & name %in% c("803112022-Pat-TCA08_Time-course assay_Auxin_yWL185-C1.fcs", "803112022-Pat-TCA08_Time-course assay_Control_yWL185-C1.fcs" ))
+
+cv <- function(x) return(round(sd(x)/mean(x),2))
+
+
+data185 <- subset(data185, BL1.A >1 & YL1.A > 1)
+data185$FLratio <- data185$BL1.A/data185$YL1.A
+range(data185$BL1.A)
+cv <- function(x) return(round(sd(x)/mean(x),2))
+
+data185$Venus <- data185$BL1.A / median(data185$BL1.A)
+data185$mScarlet <- data185$YL1.A / median(data185$YL1.A)
+data185$FLratio <- data185$BL1.A / data185$YL1.A
+data185$ratio <- data185$FLratio / median(data185$FLratio)
+
+
+
+data_long185 <- data185 %>% 
+  dplyr::select(treatment, Venus, mScarlet, ratio, strain) %>%
+  pivot_longer(cols = c(Venus, mScarlet, ratio), 
+               names_to = "parameter", 
+               values_to = "value") %>%
+  dplyr::mutate(parameter = fct_relevel(parameter, "Venus")) 
+
+# need to also format CVs approriately for annotating
+
+CV185 <-
+  data185 %>% group_by(treatment) %>% 
+  dplyr::summarise(across(dplyr::where(is_double), cv)) %>%
+  dplyr::select(treatment, Venus, mScarlet, ratio) %>%
+  pivot_longer(
+    cols = c(Venus, mScarlet, ratio),
+    names_to = "parameter",
+    values_to = "value"
+  )
+
+#data185
+
+plot185 <- ggplot(data = data_long185, 
+       mapping = aes(x = value, 
+                     color = treatment)) + 
+  geom_density() + xlim(c(-1,4)) + 
+  labs(x = "median normalized intensity", color = "treatment")  + theme_test() + 
+  geom_text(data = subset(CV185, treatment == "50 uM Auxin"), 
+             aes(label = paste0("CV = ", value)),
+             x = 2, y = 1) + 
+  geom_text(data = subset(CV185, treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0, y = 1) + 
+  scale_color_viridis_d(option = "D", end = .75, direction = -1) 
+
+
+
+
+venus185 <- ggplot(data185, aes(x=data185$Venus, group=treatment, fill=treatment, color= treatment)) + geom_density(adjust=1.5, alpha=.5) + labs(x = "Venus", y ="Density") + xlim(-0.1,2)+ ylim(0,2) + theme_classic() +  theme(legend.position="none")  + geom_text(data = subset(CV185, parameter == "Venus" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 1.2, y = 1.1) + 
+  geom_text(data = subset(CV185, parameter == "Venus"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0.55, y = 1.5) + scale_color_manual(values=c("#F1C40F", "#626567")) + scale_fill_manual(values=c("#F1C40F", "#626567"))
+#venus185
+
+red185 <- ggplot(data185, aes(x=data185$mScarlet, group=treatment, fill=treatment, color= treatment)) + geom_density(adjust=1.5, alpha=.5) + labs(x = "mScarlet", y ="Density") + xlim(-0.1,2) + ylim(0,2) + theme_classic() +  theme(legend.position="none")  + geom_text(data = subset(CV185, parameter == "mScarlet" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 1.2, y = 1.1) + 
+  geom_text(data = subset(CV185, parameter == "mScarlet"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0.55, y = 1.5) + scale_color_manual(values=c("#CB4335", "#626567")) + scale_fill_manual(values=c("#CB4335", "#626567"))
+#red185
+
+
+ratio185<- ggplot(data185, aes(x=data185$ratio, group=treatment, fill=treatment, color= treatment)) + geom_density(adjust=1.5, alpha=.5)  +labs(x = "Venus/mScarlet ratio", y ="Density") + xlim(-0.1,2) + ylim(0,3.5) + theme_classic() +  theme(legend.position="none")   +  geom_text(data = subset(CV185, parameter == "ratio" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 0.4, y = 2) + 
+  geom_text(data = subset(CV185, parameter == "ratio"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 1.6, y = 2) + scale_color_manual(values=c("#5499C7", "#626567")) + scale_fill_manual(values=c("#5499C7", "#626567"))
+
+#ratio185
+
+plot185 <- grid.arrange(venus185, red185, ratio185, nrow=3, ncol=1)
+plot185
+
+```
+
+## yWL186 (AFB2 dual-fusion, W303 yeast)
+
+```{r}
+data186 <- steadyState(aplate_03112022, gated = TRUE)
+data186 <- subset(data186, strain == "yWL186" & name %in% c("803112022-Pat-TCA08_Time-course assay_Auxin_yWL186-C1.fcs", "803112022-Pat-TCA08_Time-course assay_Control_yWL186-C1.fcs" ))
+
+cv <- function(x) return(round(sd(x)/mean(x),2))
+
+
+data186 <- subset(data186, BL1.A >1 & YL1.A > 1)
+data186$FLratio <- data186$BL1.A/data186$YL1.A
+range(data186$BL1.A)
+cv <- function(x) return(round(sd(x)/mean(x),2))
+
+data186$Venus <- data186$BL1.A / median(data186$BL1.A)
+data186$mScarlet <- data186$YL1.A / median(data186$YL1.A)
+data186$FLratio <- data186$BL1.A / data186$YL1.A
+data186$ratio <- data186$FLratio / median(data186$FLratio)
+
+
+
+data_long186 <- data186 %>% 
+  dplyr::select(treatment, Venus, mScarlet, ratio, strain) %>%
+  pivot_longer(cols = c(Venus, mScarlet, ratio), 
+               names_to = "parameter", 
+               values_to = "value") %>%
+  dplyr::mutate(parameter = fct_relevel(parameter, "Venus")) 
+
+# need to also format CVs approriately for annotating
+
+CV186 <-
+  data186 %>% group_by(treatment) %>% 
+  dplyr::summarise(across(dplyr::where(is_double), cv)) %>%
+  dplyr::select(treatment, Venus, mScarlet, ratio) %>%
+  pivot_longer(
+    cols = c(Venus, mScarlet, ratio),
+    names_to = "parameter",
+    values_to = "value"
+  )
+
+#data186
+
+plot186 <- ggplot(data = data_long186, 
+       mapping = aes(x = value, 
+                     color = treatment)) + 
+  geom_density() + xlim(c(-1,4)) + 
+  labs(x = "median normalized intensity", color = "treatment")  + theme_test() + 
+  geom_text(data = subset(CV186, treatment == "50 uM Auxin"), 
+             aes(label = paste0("CV = ", value)),
+             x = 2, y = 1) + 
+  geom_text(data = subset(CV186, treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0, y = 1) + 
+  scale_color_viridis_d(option = "D", end = .75, direction = -1) 
+
+
+
+venus186 <- ggplot(data186, aes(x=data186$Venus, group=treatment, fill=treatment, color = treatment)) + geom_density(adjust=1.5, alpha=.4) + labs(x = "Venus (normalized median)", y ="Density") + xlim(0,2)+ ylim(0,2) + theme_classic() +  theme(legend.position="none") + geom_text(data = subset(CV186, parameter == "Venus" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 1.2, y = 1.1) + 
+  geom_text(data = subset(CV186, parameter == "Venus"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0.55, y = 1.5) + scale_color_manual(values=c("#F1C40F", "#626567")) + scale_fill_manual(values=c("#F1C40F", "#626567"))
+
+
+red186 <- ggplot(data186, aes(x=data186$mScarlet, group=treatment, fill=treatment, color = treatment)) + geom_density(adjust=1.5, alpha=.4) + labs(x = "mScarlet (normalized median)", y ="Density") + xlim(0,2) + ylim(0,2) + theme_classic() +  theme(legend.position="none") +  scale_fill_manual(values=c("#EC7063", "#999999")) + geom_text(data = subset(CV186, parameter == "mScarlet" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 1.2, y = 1.1) + 
+  geom_text(data = subset(CV186, parameter == "mScarlet"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0.55, y = 1.5) + scale_color_manual(values=c("#CB4335", "#626567")) + scale_fill_manual(values=c("#CB4335", "#626567"))
+
+
+ratio186<- ggplot(data186, aes(x=data186$ratio, group=treatment, fill=treatment, color = treatment)) + geom_density(adjust=1.5, alpha=.4)  +labs(x = "Venus/mScarlet ratio", y ="Density") + xlim(0,2) + ylim(0,3.5) + theme_classic() +  theme(legend.position="none")   +  geom_text(data = subset(CV186, parameter == "ratio" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 0.2, y = 2) + 
+  geom_text(data = subset(CV186, parameter == "ratio"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 1.3, y = 2) + scale_color_manual(values=c("#5499C7", "#626567")) + scale_fill_manual(values=c("#5499C7", "#626567"))
+
+plot186 <- grid.arrange(venus186, red186, ratio186, nrow=3, ncol=1)
+plot186
+```
+
+## yWL209 (TIR1 dual-fusion, YPH499 yeast)
+
+```{r}
+
+data209 <- steadyState(aplate_03112022, gated = TRUE)
+data209 <- subset(data209, strain == "yWL209" & name %in% c("803112022-Pat-TCA08_Time-course assay_Auxin_yWL209-C1.fcs", "803112022-Pat-TCA08_Time-course assay_Control_yWL209-C1.fcs" ))
+
+cv <- function(x) return(round(sd(x)/mean(x),2))
+
+
+data209 <- subset(data209, BL1.A >1 & YL1.A > 1)
+data209$FLratio <- data209$BL1.A/data209$YL1.A
+range(data209$BL1.A)
+cv <- function(x) return(round(sd(x)/mean(x),2))
+
+data209$Venus <- data209$BL1.A / median(data209$BL1.A)
+data209$mScarlet <- data209$YL1.A / median(data209$YL1.A)
+data209$FLratio <- data209$BL1.A / data209$YL1.A
+data209$ratio <- data209$FLratio / median(data209$FLratio)
+
+
+
+data_long209 <- data209 %>% 
+  dplyr::select(treatment, Venus, mScarlet, ratio, strain) %>%
+  pivot_longer(cols = c(Venus, mScarlet, ratio), 
+               names_to = "parameter", 
+               values_to = "value") %>%
+  dplyr::mutate(parameter = fct_relevel(parameter, "Venus")) 
+
+# need to also format CVs approriately for annotating
+
+CV209 <-
+  data209 %>% group_by(treatment) %>% 
+  dplyr::summarise(across(dplyr::where(is_double), cv)) %>%
+  dplyr::select(treatment, Venus, mScarlet, ratio) %>%
+  pivot_longer(
+    cols = c(Venus, mScarlet, ratio),
+    names_to = "parameter",
+    values_to = "value"
+  )
+
+#data209
+
+plot209 <- ggplot(data = data_long209, 
+       mapping = aes(x = value, 
+                     color = treatment)) + 
+  geom_density() + xlim(c(-1,4)) + 
+  labs(x = "median normalized intensity", color = "treatment")  + theme_test() + 
+  geom_text(data = subset(CV209, treatment == "50 uM Auxin"), 
+             aes(label = paste0("CV = ", value)),
+             x = 1.2, y = 1) + 
+  geom_text(data = subset(CV209, treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0, y = 1) + 
+  scale_color_viridis_d(option = "D", end = .75, direction = -1) 
+
+
+
+
+venus209 <- ggplot(data209, aes(x=data209$Venus, group=treatment, fill=treatment, color = treatment)) + geom_density(adjust=1.5, alpha=.4) + labs(x = "Venus", y ="Density") + xlim(0,2)+ ylim(0,2) + theme_classic() +  theme(legend.position="none")  + geom_text(data = subset(CV209, parameter == "Venus" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 1.2, y = 1.1) + 
+  geom_text(data = subset(CV209, parameter == "Venus"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0.55, y = 1.5) + scale_color_manual(values=c("#F1C40F", "#626567")) + scale_fill_manual(values=c("#F1C40F", "#626567"))
+
+
+red209 <- ggplot(data209, aes(x=data209$mScarlet, group=treatment, fill=treatment, color = treatment)) + geom_density(adjust=1.5, alpha=.4) + labs(x = "mScarlet", y ="Density") + xlim(0,2) + ylim(0,2) + theme_classic() +  theme(legend.position="none")  + geom_text(data = subset(CV209, parameter == "mScarlet" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 1.2, y = 1.1) + 
+  geom_text(data = subset(CV209, parameter == "mScarlet"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0.55, y = 1.5) + scale_color_manual(values=c("#CB4335", "#626567")) + scale_fill_manual(values=c("#CB4335", "#626567"))
+
+
+ratio209<- ggplot(data209, aes(x=data209$ratio, group=treatment, fill=treatment, color = treatment)) + geom_density(adjust=1.5, alpha=.4)  +labs(x = "Venus/mScarlet ratio", y ="Density") + xlim(0,2) + ylim(0,3.5) + theme_classic() +  theme(legend.position="none")   +  geom_text(data = subset(CV209, parameter == "ratio" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 0.3, y = 2) + 
+  geom_text(data = subset(CV209, parameter == "ratio"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 1.6, y = 2) + scale_color_manual(values=c("#5499C7", "#626567")) + scale_fill_manual(values=c("#5499C7", "#626567"))
+
+
+plot209 <- grid.arrange(venus209, red209, ratio209, nrow=3, ncol=1)
+plot209
+
+
+```
+
+
+## yWL210 (AFB2 dual-fusion, YPH499 yeast)
+
+```{r}
+
+data210 <- steadyState(aplate_03112022, gated = TRUE)
+#data <- tidyFlow(aplate_20210619_W303)
+
+data210 <- subset(data210, strain == "yWL210" & name %in% c("803112022-Pat-TCA08_Time-course assay_Auxin_yWL210-C1.fcs", "803112022-Pat-TCA08_Time-course assay_Control_yWL210-C1.fcs" ))
+
+cv <- function(x) return(round(sd(x)/mean(x),2))
+
+
+data210 <- subset(data210, BL1.A >1 & YL1.A > 1)
+data210$FLratio <- data210$BL1.A/data210$YL1.A
+range(data210$BL1.A)
+cv <- function(x) return(round(sd(x)/mean(x),2))
+
+data210$Venus <- data210$BL1.A / median(data210$BL1.A)
+data210$mScarlet <- data210$YL1.A / median(data210$YL1.A)
+data210$FLratio <- data210$BL1.A / data210$YL1.A
+data210$ratio <- data210$FLratio / median(data210$FLratio)
+
+
+
+data_long210 <- data210 %>% 
+  dplyr::select(treatment, Venus, mScarlet, ratio, strain) %>%
+  pivot_longer(cols = c(Venus, mScarlet, ratio), 
+               names_to = "parameter", 
+               values_to = "value") %>%
+  dplyr::mutate(parameter = fct_relevel(parameter, "Venus")) 
+
+# need to also format CVs approriately for annotating
+
+CV210 <-
+  data210 %>% group_by(treatment) %>% 
+  dplyr::summarise(across(dplyr::where(is_double), cv)) %>%
+  dplyr::select(treatment, Venus, mScarlet, ratio) %>%
+  pivot_longer(
+    cols = c(Venus, mScarlet, ratio),
+    names_to = "parameter",
+    values_to = "value"
+  )
+
+#data210
+
+plot210 <- ggplot(data = data_long210, 
+       mapping = aes(x = value, 
+                     color = treatment)) + 
+  geom_density() + xlim(c(-1,4)) + 
+  labs(x = "median normalized intensity", color = "treatment")  + theme_test() + 
+  geom_text(data = subset(CV210, treatment == "50 uM Auxin"), 
+             aes(label = paste0("CV = ", value)),
+             x = 2, y = 1) + 
+  geom_text(data = subset(CV210, treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0, y = 1) + 
+  scale_color_viridis_d(option = "D", end = .75, direction = -1) +
+  facet_grid(parameter~.) 
+
+
+
+
+venus210 <- ggplot(data210, aes(x=data210$Venus, group=treatment,color=treatment,  fill=treatment)) + geom_density(adjust=1.5, alpha=.4) + labs(x = "Venus", y ="Density") + xlim(0,2)+ ylim(0,2) + theme_classic() +  theme(legend.position="none") +  geom_text(data = subset(CV210, parameter == "Venus" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 1.5, y = 1) + 
+  geom_text(data = subset(CV210, parameter == "Venus"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0.7, y = 1.5) + scale_color_manual(values=c("#F1C40F", "#626567")) + scale_fill_manual(values=c("#F1C40F", "#626567"))
+
+
+red210 <- ggplot(data210, aes(x=data210$mScarlet, group=treatment,color=treatment,  fill=treatment)) + geom_density(adjust=1.5, alpha=.4) + labs(x = "mScarlet", y ="Density") + xlim(0,2) + ylim(0,2) + theme_classic() +  theme(legend.position="none") + geom_text(data = subset(CV210, parameter == "mScarlet" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 1.2, y = 1.2) + 
+  geom_text(data = subset(CV210, parameter == "mScarlet"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 0.4, y = 1.5) + scale_color_manual(values=c("#CB4335", "#626567")) + scale_fill_manual(values=c("#CB4335", "#626567"))
+
+
+ratio210<- ggplot(data210, aes(x=data210$ratio, group=treatment, color=treatment, fill = treatment)) + geom_density(adjust=1.5, alpha=.4)  +labs(x = "Venus/mScarlet ratio", y ="Density") + xlim(0,2) + ylim(0,3.5) + theme_classic() +  theme(legend.position="none")  + geom_text(data = subset(CV210, parameter == "ratio" & treatment == "50 uM Auxin"), aes(label = paste0("CV = ", value)),
+             x = 0.2, y = 1.8) + 
+  geom_text(data = subset(CV210, parameter == "ratio"& treatment == "Control"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 1.6, y = 1.8) + scale_color_manual(values=c("#5499C7", "#626567")) + scale_fill_manual(values=c("#5499C7", "#626567"))
+#ratio210
+
+plot210 <- grid.arrange(venus210, red210, ratio210, nrow=3, ncol=1)
+plot210
+
+```
+
+```{r}
+dual_fusion_cv <- (venus210 + ggtitle("AFB2")+ 
+                theme(plot.title = element_text(hjust = 0.5)) | 
+                venus209 + ggtitle("TIR1") + 
+                theme(plot.title = element_text(hjust = 0.5))) / 
+               (red210 | red209) / 
+             (ratio210 | ratio209) + 
+  theme(title = element_text(hjust = 0))
+dual_fusion_cv 
+ggsave("dual_fusion_cv.pdf", width = 6.3, height = 6)
+ggsave("dual_fusion_cv.png", width = 6.3, height = 6)
+```
+
+# Single-fusion vs dual-fusion comparison in W303 yeast strain
+
+-   yWL161 (TIR1 single-fusion, W303 yeast)
+-   yWL162 (AFB2 single-fusion, W303 yeast)
+-   yWL185 (TIR1 dual-fusion, W303 yeast)
+-   yWL186 (AFB2 dual-fusion, W303 yeast)
+
+```{r, eval=FALSE}
+plate_20210619_W303 <- read.plateSet(path = "~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Time course assays/20210619/W303only/", pattern = "r*") 
+```
+
+```{r, eval = F}
+annotation <- createAnnotation(yourFlowSet = plate_20210619_W303)
+write.csv(annotation,'/Users/patchaisupa/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Time course assays/20210619/20210619_W303only_annotation.csv')
+```
+
+```{r, eval=FALSE}
+annotation <- read.csv('~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Time course assays/20210619/20210619_W303only_annotation.csv')
+aplate_20210619_W303 <- annotateFlowSet(yourFlowSet = plate_20210619_W303, annotation_df = annotation, mergeBy = 'name')
+head(rownames(pData(aplate_20210619_W303)))
+head(pData(aplate_20210619_W303))
+write.flowSet(aplate_20210619_W303, outdir = "flowSets/design-relative-expression")
+```
+
+```{r}
+aplate_20210619_W303 <- read.flowSet(path = "flowSets/design-relative-expression/", phenoData = "annotation.txt")
+plate_20210619_W303_sum <- summarizeFlow(aplate_20210619_W303,  gated = TRUE)
+
+
+#The time auxin addition is equal to time zero
+time0 <- "4E01.fcs" 
+# or whatever well was being read when auxin was added
+
+plate_20210619_W303_sum$time <- plate_20210619_W303_sum$btime-plate_20210619_W303_sum[[which(plate_20210619_W303_sum$name == time0), "btime"]]
+#single bracket -->extracting the all name, 2 brackets extract just single "value" or "values"
+
+```
+
+```{r}
+plate_20210619_W303_sum <- plate_20210619_W303_sum %>%
+  mutate(
+    design = case_when(
+      strain %in% c("yWL185","yWL186") ~ "dual-fusion",
+    strain %in% c("yWL161","yWL162") ~ "single-fusion"), 
+         fbox = case_when(
+    strain %in% c("yWL161","yWL185") ~ "TIR1",
+    strain %in% c("yWL162","yWL186") ~ "AFB2")) %>%
+  mutate(design_construct = paste(fbox, design)) 
+
+plate_20210619_W303_sum <-
+  plate_20210619_W303_sum %>% mutate(ratio = FL1.Amean/FL4.Amean) %>%
+  group_by(design, fbox) %>% 
+  mutate(normalizedratio = ratio/mean(ratio))
+
+plate_20210619_W303_sum<-
+  plate_20210619_W303_sum %>% mutate(green = FL1.Amean) %>%
+  group_by(design, fbox) %>% 
+  mutate(normalized_Greenexpression = FL1.Amean/mean(FL1.Amean))
+
+plate_20210619_W303_sum <-
+  plate_20210619_W303_sum %>% mutate(red = FL4.Amean) %>%
+  group_by(design, fbox) %>% 
+  mutate(normalized_Redexpression = FL4.Amean/mean(FL4.Amean))
+```
+
+```{r}
+TIR1_single <- qplot(x = time, y = FL1.Amean/FL4.Amean, data = subset(plate_20210619_W303_sum, strain =="yWL161"), group = factor(treatment), linetype =  factor(treatment), shape = factor(treatment), color = factor(treatment)) +
+  xlab("Time (min)") +
+  geom_point(aes(color = treatment, shape = treatment), size = 1) + geom_line(aes(color = treatment, shape = treatment), linewidth = 0.5)  +  scale_shape_manual(values = c(19, 1)) + ylab("Venus/Scarlet ratio") + scale_color_manual(values = c("#5499C7", "#626567")) + theme_minimal() + theme(legend.position = "none", panel.grid.major = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), panel.grid.minor = element_line(linewidth = 0.3, linetype = 'solid', colour = "white")) +facet_wrap(~design_construct, scale ="free_y") 
+
+
+AFB2_single <- qplot(x = time, y = FL1.Amean/FL4.Amean, data = subset(plate_20210619_W303_sum, strain =="yWL162"), group = factor(treatment), linetype =  factor(treatment), shape = factor(treatment), color = factor(treatment)) +
+   xlab("Time (min)") +
+  geom_point(aes(color = treatment, shape = treatment), size = 1) + geom_line(aes(color = treatment, shape = treatment), linewidth = 0.5)  + scale_shape_manual(values = c(19, 1)) + ylab("Venus/Scarlet ratio") + scale_color_manual(values = c("#5499C7", "#626567")) + theme_minimal() + theme(legend.position = "none",  panel.grid.major = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), panel.grid.minor = element_line(linewidth = 0.3, linetype = 'solid', colour = "white")) +facet_wrap(~design_construct, scale ="free_y") 
+
+TIR1_dual <- qplot(x = time, y = FL1.Amean/FL4.Amean, data = subset(plate_20210619_W303_sum, strain =="yWL185"), group = factor(treatment), linetype =  factor(treatment), shape = factor(treatment), color = factor(treatment)) +
+  geom_point(aes(color = treatment, shape = treatment), size = 1) + geom_line(aes(color = treatment, shape = treatment), linewidth = 0.5)  + xlab("Time (min)") + scale_shape_manual(values = c(19, 1)) + ylab("Venus/Scarlet ratio") + scale_color_manual(values = c("#5499C7", "#626567")) + theme_minimal() + theme(legend.position = "none", panel.grid.major = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), panel.grid.minor = element_line(linewidth = 0.3, linetype = 'solid', colour = "white")) +facet_wrap(~design_construct, scale ="free_y") 
+
+AFB2_dual <- qplot(x = time, y = FL1.Amean/FL4.Amean, data = subset(plate_20210619_W303_sum, strain =="yWL186"), group = factor(treatment), linetype =  factor(treatment), shape = factor(treatment), color = factor(treatment)) +
+   xlab("Time (min)") +
+  geom_point(aes(color = treatment, shape = treatment), size = 1) + geom_line(aes(color = treatment, shape = treatment), linewidth = 0.5)  + scale_shape_manual(values = c(19, 1)) + ylab("Venus/Scarlet ratio") + scale_color_manual(values = c("#5499C7", "#626567")) + theme_minimal() + theme(legend.position = "none", panel.grid.major = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), panel.grid.minor = element_line(linewidth = 0.3, linetype = 'solid', colour = "white")) +facet_wrap(~design_construct, scale ="free_y") 
+
+grid.arrange(AFB2_single, TIR1_single, TIR1_dual, AFB2_dual, nrow=2, ncol=4)
+```
+
+```{r}
+W303ratio <- qplot(x = time, y = normalizedratio, data = subset(plate_20210619_W303_sum), group = factor(treatment), linetype =  factor(treatment), shape = factor(treatment), color = factor(treatment)) + xlab("Time (min)") +
+  geom_point(aes(color = treatment), size = 0.5) + geom_line(aes(color = treatment), linewidth = 1)  +  scale_shape_manual(values = c(19, 1)) + ylab("Venus") + scale_color_manual(values = c("#2E86C1", "#626567"))  + theme_minimal() + theme(legend.position = "bottom",  panel.grid.major = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), panel.grid.minor = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), axis.line = element_line(colour = "black", 
+                      linewidth = 1, linetype = "solid")) + facet_wrap(~design_construct, scale ="free_y")
+
+W303venus <- qplot(x = time, y = normalized_Greenexpression, data = subset(plate_20210619_W303_sum), group = factor(treatment), linetype =  factor(treatment), shape = factor(treatment), color = factor(treatment)) + xlab("Time (min)") +
+  geom_point(aes(color = treatment), size = 0.5) + geom_line(aes(color = treatment), linewidth = 1)  +  scale_shape_manual(values = c(19, 1)) + ylab("Venus/Scarlet") + scale_color_manual(values = c("#F1C40F", "#626567"))  + theme_minimal() + theme(legend.position = "bottom",  panel.grid.major = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), panel.grid.minor = element_line(linewidth = 0.3, linetype = 'solid', colour = "white"), axis.line = element_line(colour = "black", 
+                      linewidth = 1, linetype = "solid")) + facet_wrap(~design_construct, scale ="free_y")
+
+grid.arrange(W303venus, W303ratio, nrow=2, ncol=2)
+
+```
+
+```{r}
+Venus_aov <- aov(FL1.Amean ~ design_construct * treatment * before_after, 
+  data = plate_20210619_W303_sum %>%
+  dplyr::filter(time <= 0 | time >= 200))
+summary(Venus_aov)
+(Venus_HSD.test <- 
+    agricolae::HSD.test(Venus_aov, 
+                        trt = c("design_construct", 
+                                "treatment", 
+                                "before_after"), 
+                        console = TRUE))
+Venus_groups <- Venus_HSD.test$groups %>% 
+  as_tibble(rownames = "names") %>%
+  separate(col = names, into = c("design_construct", 
+                                "treatment", 
+                                "before_after"), 
+           sep = "\\:", remove = FALSE) %>% 
+  left_join(Venus_HSD.test$means %>% 
+              as_tibble(rownames = "names") %>% 
+              dplyr::select(c(names, Max)), 
+            by = "names") %>%
+  mutate(treatment = fct_rev(treatment), 
+         before_after = fct_rev(before_after))
+
+```
+
+```{r}
+mScarlet_aov <- aov(FL4.Amean ~ design_construct * treatment * before_after, 
+  data = plate_20210619_W303_sum %>%
+  dplyr::filter(time <= 0 | time >= 200))
+summary(mScarlet_aov)
+(mScarlet_HSD.test <- 
+    agricolae::HSD.test(mScarlet_aov, 
+                        trt = c("design_construct", 
+                                "treatment", 
+                                "before_after"), 
+                        console = TRUE))
+mScarlet_groups <- mScarlet_HSD.test$groups %>% 
+  as_tibble(rownames = "names") %>%
+  separate(col = names, into = c("design_construct", 
+                                "treatment", 
+                                "before_after"), 
+           sep = "\\:", remove = FALSE) %>% 
+  left_join(mScarlet_HSD.test$means %>% 
+              as_tibble(rownames = "names") %>% 
+              dplyr::select(c(names, Max)), 
+            by = "names") %>%
+  mutate(treatment = fct_rev(treatment), 
+         before_after = fct_rev(before_after))
+
+```
+
+```{r}
+boxvenus <- 
+  plate_20210619_W303_sum %>%
+  dplyr::filter(time <= 0 | time >= 200) %>%
+  ggplot(aes(
+           x = fct_rev(before_after),
+           y = FL1.Amean/1000,
+         )) +
+  geom_boxplot(
+    aes(fill = fct_rev(treatment)), alpha = 0.7,
+    outlier.shape = NA, show.legend = FALSE) + 
+  geom_point(aes(color = fct_rev(treatment)),
+             position = position_dodge2(width = .55), 
+             size = 1) +
+  geom_text(data = Venus_groups, 
+            mapping = aes(y = 1.05*Max/1000, label = groups), 
+             position = position_dodge2(width = 1),
+            color = "black") + 
+  scale_fill_manual(values = c("#8f8f8f", "#edc215")) +
+  scale_color_manual(values = c("#8f8f8f", "#edc215")) +
+  ylab("Venus") + 
+  xlab("50 µM Auxin treatment") +  
+  facet_wrap( ~ fbox, scale = "free_y") + 
+  facet_grid( ~ design_construct) + 
+  theme_classic() + labs(color = "") 
+
+
+boxmScarlet <-
+  plate_20210619_W303_sum %>%
+  dplyr::filter(time <= 0 | time >= 200) %>%
+  ggplot(aes(
+           x = fct_rev(before_after),
+           y = FL4.Amean/1000
+         )) +
+  geom_boxplot(aes(fill = fct_rev(treatment)), alpha = .7,
+               outlier.shape = NA, show.legend = FALSE) + 
+  geom_point(aes(color = fct_rev(treatment)),
+             position = position_dodge2(width = .55), 
+             size = 1) +
+   geom_text(data = mScarlet_groups, 
+            mapping = aes(y = 1.2*Max/1000, label = groups), 
+             position = position_dodge2(width = 1),
+            color = "black") + 
+  scale_fill_manual(values = c("#8f8f8f", "#EC7063")) +
+  scale_color_manual(values = c("#8f8f8f", "#EC7063")) +
+  ylab("mScarlet-I") + 
+  xlab("50 µM Auxin treatment") +   
+  facet_wrap( ~ fbox, scale = "free_y") + 
+  facet_grid( ~ design_construct, scales = "free_y") +
+  theme_classic() + labs(color = "") + scale_y_log10()
+
+
+guide_area() / boxvenus / boxmScarlet + 
+  plot_annotation(tag_levels = "A") + 
+  plot_layout(guides = "collect", heights = c(.3, 1,1)) & 
+  theme(legend.box = "horizontal", 
+        legend.spacing = unit(0, "pt"), 
+        legend.justification = "top", 
+        legend.margin = margin(), 
+        legend.box.spacing = unit(0, "pt"), 
+        legend.background = element_blank(), 
+        legend.box.background = element_blank(), 
+        legend.title = element_blank(), 
+        legend.key = element_blank())
+
+ggsave("relative-expression-box.pdf", width = 6, height = 5)
+ggsave("relative-expression-box.png", width = 6, height = 5)
+```
+
+```{r}
+
+
+```
+
+
+```{r}
+plate_20210619_read3and12 <- read.flowSet(path = "~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Time course assays/20210619/W303only_read3and12/", alter.names = TRUE) 
+```
+
+```{r, eval = F}
+annotation <- createAnnotation(yourFlowSet = plate_20210619_read3and12)
+write.csv(annotation,'/Users/patchaisupa/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Time course assays/20210619/20210619_W303only_read3and12_annotation.csv')
+```
+
+```{r}
+annotation <- read.csv('~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Time course assays/20210619/20210619_W303only_read3and12_annotation.csv')
+aplate_20210619_read3and12<- annotateFlowSet(yourFlowSet = plate_20210619_read3and12, annotation_df = annotation, mergeBy = 'name')
+head(rownames(pData(aplate_20210619_read3and12)))
+head(pData(aplate_20210619_read3and12))
+
+```
+
+```{r}
+W303_read3and12 <- summarizeFlow(aplate_20210619_read3and12,  gated = TRUE)
+W303_read3and12 <- W303_read3and12 %>% 
+  mutate(design = str_extract(design_construct, "(?<=\\s).*")) %>%
+  mutate(design = str_extract(design_construct, ".*(?=\\s)")) 
+
+venus3and12_unnorm <- 
+  ggplot(W303_read3and12, 
+         aes(x=design_construct, 
+             y=FL1.Amean, 
+             alpha = fct_rev(before_after), 
+             group=treatment)) +
+  geom_point(aes(colour = factor(treatment), 
+                 shape = factor(treatment)), size = 2,
+             position = position_jitterdodge(
+               dodge.width = 0.7, 
+               jitter.width = 0.5)) + 
+  scale_color_manual(values=c("#F1C40F", "#5F6A6A")) +
+  ylab("Venus") + theme_classic() +
+  theme(axis.text.x = element_text(angle=45, hjust = 1)) + 
+  scale_alpha_manual(values = c(0.3, 0.8))
+
+mScarlet3and12_unnorm  <- 
+  ggplot(W303_read3and12, 
+         aes(x=design_construct, 
+             y=FL4.Amean, 
+             alpha = fct_rev(before_after), 
+             group=treatment)) +
+  geom_point(aes(colour = factor(treatment), 
+                 shape = factor(treatment)), 
+             size = 2, 
+             position = position_jitterdodge(
+               dodge.width = .7, 
+               jitter.width =.5)) + 
+  scale_color_manual(values=c("#E74C3C", "#5F6A6A")) +
+  ylab("mScarlet-I") + theme_classic() + 
+  theme(axis.text.x = element_text(angle=45, hjust = 1)) + 
+  scale_alpha_manual(values = c(0.3, 0.8))
+
+guide_area() / (venus3and12_unnorm | mScarlet3and12_unnorm) + 
+  plot_layout(guides = "collect", 
+              heights = c(1, 3))  +
+  plot_annotation(tag_levels = "A") &
+  theme(legend.position='top', legend.direction = "vertical",
+        legend.title = element_blank(), 
+        axis.title.x = element_blank(), 
+        legend.justification = "left", 
+        legend.box.just = "left", 
+        legend.margin = margin())
+ggsave("relative-expression.png", width = 4, height = 3)
+ggsave("relative-expression.pdf", width = 4, height = 3)
+```
+
+Coefficient of variation (CV) analysis
+
+```{r}
+
+data <- steadyState(aplate_20210619_W303, gated = TRUE)
+#data <- tidyFlow(aplate_20210619_W303)
+
+data <- subset(data, strain == "yWL161" & name %in% c("11L01.fcs", "11L07.fcs"))
+
+#range(data$FL1.A)
+#sd(data$FLratio)/mean(data$FLratio)
+#range(data$FLratio)
+data <- subset(data, FL1.A >1 & FL4.A > 1)
+data$FLratio <- data$FL1.A/data$FL4.A
+range(data$FL1.A)
+#calculate cvs
+sd(data$FLratio)/mean(data$FLratio)
+range(data$FLratio)
+cv <- function(x) return(round(sd(x)/mean(x),2))
+
+#calculate normalized values
+data$Venus <- data$FL1.A / median(data$FL1.A)
+data$mScarlet <- data$FL4.A / median(data$FL4.A)
+data$ratio <- data$FLratio / median(data$FLratio)
+CVs <- data %>% group_by(treatment) %>%
+  summarise(across(where(is_double), cv))
+# make a tidy, long dataset 
+
+data_long <- data %>% 
+  dplyr::select(treatment, Venus, mScarlet, ratio) %>%
+  pivot_longer(cols = c(Venus, mScarlet, ratio), 
+               names_to = "parameter", 
+               values_to = "value") 
+# need to also format CVs appropriately for annotating
+CVs <- CVs %>% dplyr::select(treatment, Venus, mScarlet, ratio) %>%
+    pivot_longer(cols = c(Venus, mScarlet, ratio), 
+               names_to = "parameter", 
+               values_to = "value")
+
+#data
+CV_plot <- ggplot(data = data_long, 
+       mapping = aes(x = value, 
+                     color = treatment)) + 
+  geom_density() + xlim(c(-1,4)) + 
+  labs(x = "median normalized intensity", color = "treatment") + 
+  facet_grid(parameter~.) + theme_test() + 
+  geom_text(data = subset(CVs, treatment == "Auxin"), 
+             aes(label = paste0("CV = ", value)),
+             x = 0.1, y = 0.6) + 
+  geom_text(data = subset(CVs, treatment == "Control EtOH"), 
+             aes(label = paste0("CV = ", value)), 
+            x = 1.8, y = 0.6) + 
+  scale_color_viridis_d(option = "D", end = .75, direction = -1)
+CV_plot
+
+```
+
+# Auxin prodcution in stationary phase
+
+Read in annotated flowSet
+```{r, eval=FALSE}
+flowSet <- read.flowSet(path = paste0("~/Google Drive/Shared drives/PlantSynBioLab/Auxin Biosensor Manuscript/Auxin Biosensor Data/FlowSets/", experiment_date, "_", experiment_name), phenoData = "annotation.txt")
+write.flowSet(flowSet, "flowSets/auxin-biosynthesis")
+```
+```{r}
+flowSet <- read.flowSet(path = "flowSets/auxin-biosynthesis/", phenoData = "annotation.txt")
+```
+
+## Summary Analysis
+
+```{r}
+load("PSB_Accuri_W303.RData")
+dat_sum <- summarizeFlow(flowSet, ploidy = "haploid", only = "yeast") # These gates might not work well for YPH499, but there was a lot of debris
+```
+
+```{r}
+dat_sum <- mutate(.data = dat_sum, across(starts_with("FL"), as.numeric)) %>%
+  mutate(strain = str_remove(strain, " ratiometric sensor") %>% 
+           str_replace(pattern = "in trans", 
+                       replacement = "single-fusion") %>%
+           str_replace(pattern = "in cis",
+                       replacement = "dual-fusion"))
+dat_sum$pred_auxin <- dat_sum$FL4.Amean/dat_sum$FL1.Amean 
+dat_sum$pred_auxin_SE <- with(dat_sum, 
+                              sqrt((FL4.Asd/100/FL4.Amean)^2 +
+                              (FL1.Asd/100/FL1.Amean)^2)*pred_auxin)
+dat_sum$pred_auxin_sd <- with(dat_sum, 
+                              sqrt((FL4.Asd/FL4.Amean)^2 + 
+                              (FL1.Asd/FL1.Amean)^2)*pred_auxin)
+```
+
+```{r}
+ggplot(data = dat_sum, 
+       aes(x = fct_reorder(treat, pred_auxin), y = pred_auxin,
+           color = factor(strain))) +
+  geom_point() + 
+  theme(axis.text.x = element_text(angle = 45, 
+                                   hjust = 1, vjust = 1)) + 
+  facet_grid(.~strain, scales = "free_x") + coord_flip() +
+  theme(legend.position = "bottom", 
+        legend.direction = "vertical") + 
+  labs(x = "", y = "Predicted auxin (mScarlet-I/Venus-IAA17)", 
+       color = "strain")
+ggsave("strain_sensor_comparison_raw.pdf", width = 8, height = 3)
+```
+
+```{r}
+dat_sum <- dat_sum %>% group_by(strain) %>% 
+  mutate(norm_pred_auxin = 
+           pred_auxin / mean(pred_auxin
+                             [which(.data$treat == 
+                            "aerobic exponential phase")]))
+
+ggplot(data = dat_sum, aes(x = fct_reorder(treat, norm_pred_auxin),
+                           y = norm_pred_auxin,
+                           color = factor(strain))) +
+  geom_point(position = position_jitter(width = 0.2)) + 
+  theme(axis.text.x = element_text(angle = 45, 
+                                   hjust = 1, vjust = 1)) + 
+  coord_flip() + theme(legend.position = "top", 
+                       legend.direction = "vertical") + 
+  labs(x = "", 
+       y = "Normalized Predicted auxin (mScarlet-I/Venus-IAA17)", 
+       color = "strain")
+ggsave("strain_sensor_comparison_norm.pdf", width = 5, height = 5)
+
+```
+
+Full distributions
+
+```{r}
+data <- steadyState(flowset = flowSet, ploidy = "haploid", only = "yeast")
+
+hist(x = log(data$FL1.A, 10))
+hist(x = log(data$FL4.A, 10))
+
+```
+
+```{r}
+data$pred_auxin <- data$FL4.A/data$FL1.A
+data <- data %>% dplyr::filter(FL1.A > 1 & FL4.A > 1)
+data$treat <- data$treat %>% str_remove("phase")
+```
+
+
+```{r}
+endog_auxin <- ggplot(
+  data = subset(
+    data,
+    strain == "W303 ratiometric sensor AFB2 in cis" &
+      pred_auxin < 2),
+  aes(
+    x = pred_auxin,
+    y = fct_reorder(treat, .x = pred_auxin, 
+                    .fun = median, .desc = TRUE) %>% 
+      fct_relevel("aerobic exponential ", after = Inf),
+    fill = factor(stat(quantile))
+  )
+) +
+  stat_density_ridges(
+    geom = "density_ridges_gradient",
+    calc_ecdf = TRUE,
+    quantiles = 4,
+    color = "grey",
+    alpha = 0.5
+  ) +
+  scale_fill_viridis_d(name = "Quartiles") +
+  theme(legend.position = NULL) +
+  #facet_wrap(.~treat) +
+  xlim(c(-0.1, 1)) +
+  labs(y = NULL, x = "Predicted relative auxin production (AU) \n (AFB2-mScarlet-I/Venus-IAA17)") + theme_ridges() + theme(legend.position = "none")
+ggsave("20210626_auxin_production_quartiles.pdf", width = 5, height = 4)
+endog_auxin
+```
+
+## Biosensor sensitivity at stationary phase
+
+```{r, eval=FALSE}
+plate_09282022 <- read.plateSet(path = "~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Does-response assay/09282022_yWL210_DRA-stationary/Data/", pattern = "S-DRA*") 
+```
+
+```{r, eval=FALSE}
+annotation_09282022 <- read.csv('~/Google Drive/Shared drives/PlantSynBioLab/Pat/Experiments/Does-response assay/09282022_yWL210_DRA-stationary/09282022_stationaryphase_annotation.csv')
+
+aplate_09282022 <- annotateFlowSet(yourFlowSet = plate_09282022, annotation_df = annotation_09282022, mergeBy = 'name')
+head(rownames(pData(aplate_09282022)))
+head(pData(aplate_09282022))
+write.flowSet(aplate_09282022, "flowSets/AFB2-dual-stationary")
+```
+
+```{r}
+aplate_09282022 <- read.flowSet(path = "flowSets/AFB2-dual-stationary/", phenoData = "annotation.txt")
+
+dat_sumGr_09282022 <- summarizeFlow(aplate_09282022, gated = TRUE)
+
+model.LL4_09282022<- drm(YL1.Amean/BL1.Amean~dose, data=subset(dat_sumGr_09282022, set == "4"), fct=LL.4(names = c("Slope", "Lower Limit", "Upper Limit", "ED50")))
+
+pm210stat <- expand.grid(treatment=exp(seq(log(1e-5), log(1e2), length=1000))) 
+pm210stat <- cbind(pm210stat,predict(model.LL4_09282022, newdata=pm210stat, interval="confidence"))  #m2all = model of 210 data
+
+plot210_stat <- ggplot(subset(dat_sumGr_09282022, set == "4"), 
+                       aes(x = dose, y = YL1.Amean/BL1.Amean))  +
+ geom_ribbon(data = pm210stat, 
+             aes(x = treatment, y = Prediction, 
+                 ymin = Lower, ymax=Upper), alpha = .2) +
+  geom_line(data = pm210stat, aes(x = treatment, y = Prediction)) + 
+  ylab("AFB2-mScarlet-I/Venus-IAA17") + 
+  xlab("Exogenous Auxin (µM)") + 
+  scale_x_log10(labels = 
+                  scales::label_number(drop0trailing = TRUE)) + 
+  scale_color_viridis_d() + geom_point() + 
+  theme_classic(base_size = 14) + 
+  theme(legend.position = "none") 
+plot210_stat
+```
+
+## Combined figure
+
+```{r, fig.width=8, fig.height=4}
+endog_auxin + plot210_stat + plot_annotation(tag_levels = "A")
+ggsave("auxin-accumulation.pdf", width = 8, height = 4)
+ggsave("auxin-accumulation.png", width = 8, height = 4)
+```
+
+
+# Mutant library analysis
+
+Here we aim to test auxin induced Venus-IAA17 degradation relative to the bicistronic mScarlet-I control with AFB2 expressed from the p1 plasmid in the OrthoRep continuous mutagenesis system. 
+
+## Procedure
+
+Temperature 30 degree celcius
+Shaking at 250rpm 
+DO-URA-HIS, starting volume: 10 mL
+Overnight concentration: 30 events/uL
+1PM started from 2 colonies
+
+Initial reading ~10AM
+Auxin concentration: 100 uM (.1% DMSO)
+After 4th reading: B04.fcs
+
+###Importing and annotating data
+
+```{r}
+aplate1 <- read.flowSet(path = 'flowSets/OrthoRep', phenoData = "annotation.txt")
+dat_sum <- summarizeFlow(aplate1, gated = TRUE)
+```
+
+```{r tidyFlow}
+data <- flowTime::tidyFlow(aplate1, gated = TRUE)
+data <- subset(data, FL4.A > 1)
+range(data$FL1.A)
+range(data$FL4.A)
+data$ratio <- data$FL1.A / data$FL4.A
+data <- subset(data, data$ratio < 10)
+```
+Make a kernel density plot overlapping mutant population with parent, DMSO and IAA that we can then stack a few timepoints with facets. For timepoints it looks like the 2nd, 7th and 12th would be a good demonstration of the timecourse.
+
+```{r}
+wells <- dat_sum %>%
+                 # Get well/file names of the 2nd, 7th and 12th readings of the 4 strains. 
+                 dplyr::slice(1:4 + unlist(lapply((c(2, 7, 12) - 1)*4, rep, 4))) %>%
+                 dplyr::pull("name")
+data <- 
+  dplyr::filter(data, name %in% wells)
+
+data$approxtime <- signif(data$etime, digits = 1)
+signif(unique(data$approxtime), 1)
+data$approxtime <- as.factor(data$approxtime) %>% fct_recode("0 hour" = "30", "1 hour" = "200", "6 hour" = "600")
+data$strain <- fct_recode(data$strain, "high fidelity" = "wild" , "error prone" = "mutant")
+data <- 
+  data %>% 
+  mutate(Venus = FL1.A, 
+         mScarlet = FL4.A, 
+         ratio = Venus/mScarlet)
+
+cv <- function(x) return(round(sd(x)/mean(x),2))
+CVs <- data %>% group_by(treatment, strain) %>% dplyr::summarise(across(where(is_double), cv))
+CVs <- CVs %>% dplyr::select(treatment, Venus, mScarlet, ratio) %>%
+    pivot_longer(cols = c(Venus, mScarlet, ratio), 
+               names_to = "parameter", 
+               values_to = "value")
+
+kernel_plot <- ggplot(data = data, 
+       mapping = aes(x = ratio, 
+                     color = treatment, linetype = strain)) + 
+  geom_density() + coord_cartesian(x = c(0.5,2)) + 
+  facet_grid(approxtime~.) + theme_test() + 
+  scale_color_viridis_d(option = "D", end = .75, direction = -1) + 
+  labs(x = "Venus-IAA17/mScarlet ratio", linetype = "polymerase")
+kernel_plot
+ggsave("orthorep_degradation.pdf", height = 4, width = 4)
+ggsave("orthorep_degradation.png", height = 4, width = 4)
+
+```
+
+## Gating Strategy 
+
+```{r}
+data <- aplate1[wells]
+```
+
+To gate out the high FSC-A debris we will use only the lower 99.5% of the data 
+```{r}
+g <- gate_quantile(fr = data[[1]], channel = "FSC.A", probs = 0.995)
+autoplot(data[[1]], x = "FSC-A") + geom_gate(g)
+Subset(data[[1]], !g)
+autoplot(Subset(data[[3]], !g), x = "FSC-A", "SSC-A")
+```
+
+```{r}
+autoplot(data[[3]], "FSC-A", "SSC-A") + geom_gate(g)
+```
+Now we need to gate out only singlet cells
+```{r}
+chnl <- c("FSC-A", "FSC-H")
+singlets <- gate_singlet(x = Subset(data[[1]], !g), area = "FSC.A",height = "FSC.H", prediction_level = 0.999, maxit = 20)
+autoplot(data[[1]], "FSC-A", "FSC-H") + geom_gate(singlets)
+```
+Now we can assess this singlets gate over for several frames
+```{r}
+length(data)
+autoplot(data, x = "FSC-A", y = "FSC-H") + geom_gate(singlets) + facet_wrap("name", ncol = 4) 
+
+autoplot(Subset(data, !g) %>% Subset(singlets), x = "FL1-A") + facet_wrap("name", ncol = 4) 
+```
+```{r}
+autoplot(Subset(data, !g |singlets), x = "FSC-A", y = "SSC-A") + facet_wrap("name", ncol = 4)
+```
+
+This looks very consistent across the course of this experiment. We can summarize this gating across the whole experiment, but will not show this here. 
+
+```{r}
+#summary(filter(data, !g & singlets))
+data <- Subset(data, !g & singlets)
+```
+
+
+Plot Fluorescence vs. Time
+
+```{r, fig.width = 4, fig.height = 4}
+dat_sum <- summarizeFlow(data, gated = TRUE)
+
+ggplot(data = dat_sum, aes(x = time, y = FL1.Amean/FL4.Amean, color = factor(strain), linetype = factor(treatment)))+
+geom_line() + xlab("Time post first reading (min)") +
+ylab("Reporter Fluorescence, FL1 (AU)") + geom_text(aes(label = name))
+
+ggplot(data = dat_sum, aes(x = time, y = conc, color = factor(strain), linetype = factor(treatment)))+
+geom_line() + xlab("Time post first reading (min)") +
+ylab("Reporter Fluorescence, FL1 (AU)")
+```
+Define a gate containing ~95% of the untreated cells expressing the wildtype polymerase. 
+
+```{r}
+logt <- estimateLogicle(data[["E05.fcs"]], channels = c("FL4.A", "FL1.A"))
+data <- transform(data[c("E05.fcs", "E06.fcs", "E07.fcs", "E08.fcs")], logt)
+untreated <- gate_flowclust_2d(data[["E05.fcs"]], xChannel = "FL4.A", yChannel = "FL1.A", K = 1, quantile = 0.90, filterId = "untreated")
+treated <- gate_flowclust_2d(data[["E06.fcs"]], xChannel = "FL4.A", yChannel = "FL1.A", K = 1, quantile = 0.90, filterId = "treated")
+
+
+
+ggcyto(data, aes(x = "FL4.A", y = "FL1.A")) + 
+  geom_point(color = "green4", alpha = 0.1, size = 0.5) + 
+  ggthemes::theme_base() + 
+  labs(x = "mScarlet-I (free FP)", y = "Venus-IAA17") +
+  facet_grid(fct_rev(strain) %>% 
+               fct_recode("wild-type" = "wild")~treatment) + 
+  coord_cartesian(xlim = c(1.4,2.6), ylim = c(1.4,2.6)) + 
+  geom_gate(untreated, colour = "magenta", linetype = 2) + 
+  geom_gate(treated, colour = "magenta") +
+  geom_stats(adjust = c(0.1, 0.05), size = 4.5, alpha = 0.5) 
+
+
+ggsave("sorting-strategy.pdf", height = 4.5, width = 6)
+ggsave("sorting-strategy.png", height = 4.5, width = 6)
+```
+
+
+## Mutation frequency calculation
+ 
+As an overestimate, these cells were cultured for ~12 generations over 24 hours. So this results in 2^12^ cells for each initial. 
+
+AFB2 is 1725 bps, and the mutation rate of the error prone polymerase is calculated to be $1 \times 10^{-5}$ substitutions per base. We will assume there is only 1 copy of the p1 plasmid per cell. We will also assume withing this coding sequence, for every 2.1 substitutions (sub) there is 1 nonsynonymous substitution (nsub), per the average across the codon table, not factoring in codon usage across TIR1.
+
+$$
+    \begin{array}{c|c|c}
+     1 \times 10^{-5} \text{ sub}  & 
+     1725 \text{ bases} * 2 \text{ (bp)} & 
+     1 \text{ nsub} \\ \hline
+      \text{base}                              & 
+      \text{cell} & 
+      2.1 \text{ sub}
+    \end{array} = `r 10^-5 *2100*2/2.1` \frac{\text{nsub}}{\text{cell}} 
+$$
+So on the low end, ~`r (cell_n_rate <- 10^-5 *1725*2/2.1)` percent of cells have a nonsynonymous substitution in *TIR1*. But because this substitution rate is really compounding over 12 generations, this estimate is quite low. 
+
+Based on this baseline rate per cell (or generation, cell duplication) $r$, we can then compound this over $t$ generations, to find the compounded rate $r_c$.
+$$
+r_c = (1 + r)^t-1 = (1+`r cell_n_rate`)^{12}-1 = 
+  `r (1+cell_n_rate)^12 - 1`
+$$
+And on the high end, which is a more accurate measure, ~`r round(100*((1+cell_n_rate)^12 - 1), 0)`% of our population contains a nonsynonymous substitution in *TIR1*. 
+
+# Session Info 
+```{r}
+sessionInfo()
+```
+

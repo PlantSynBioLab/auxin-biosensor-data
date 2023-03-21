@@ -1,0 +1,56 @@
+#name: Name
+#folder: NA
+#X: NA
+#treatment: NA
+#dose: NA
+#replicate: NA
+#point: NA
+#colony: NA
+#FCS_File: NA
+name	folder	X	treatment	dose	replicate	point	colony	FCS_File
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0 uM.fcs	DRA-03182023_read8	1	0 uM	0	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0 uM.fcs
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.0000102 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.0000102 uM.fcs	DRA-03182023_read8	2	0.0000102 uM	1.02e-05	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.0000102 uM.fcs
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.0000512 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.0000512 uM.fcs	DRA-03182023_read8	3	0.0000512 uM	5.12e-05	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.0000512 uM.fcs
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.000256 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.000256 uM.fcs	DRA-03182023_read8	4	0.000256 uM	0.000256	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.000256 uM.fcs
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.00128 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.00128 uM.fcs	DRA-03182023_read8	5	0.00128 uM	0.00128	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.00128 uM.fcs
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.0064 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.0064 uM.fcs	DRA-03182023_read8	6	0.0064 uM	0.0064	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.0064 uM.fcs
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.032 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.032 uM.fcs	DRA-03182023_read8	7	0.032 uM	0.032	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.032 uM.fcs
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.16 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.16 uM.fcs	DRA-03182023_read8	8	0.16 uM	0.16	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.16 uM.fcs
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.8 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.8 uM.fcs	DRA-03182023_read8	9	0.8 uM	0.8	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 0.8 uM.fcs
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 100 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 100 uM.fcs	DRA-03182023_read8	10	100 uM	100	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 100 uM.fcs
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 20 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 20 uM.fcs	DRA-03182023_read8	11	20 uM	20	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 20 uM.fcs
+1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 4 uM.fcs	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 4 uM.fcs	DRA-03182023_read8	12	4 uM	4	4	8	1	1Pat-03182023-Biosensors_DRA08_Experiment_yWL209-PC_IAA 4 uM.fcs
+2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0 uM.fcs	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0 uM.fcs	DRA-11152022_read8	13	0 uM	0	1	8	1	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0 uM.fcs
+2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.000256 uM.fcs	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.000256 uM.fcs	DRA-11152022_read8	14	0.000256 uM	0.000256	1	8	1	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.000256 uM.fcs
+2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.00128 uM.fcs	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.00128 uM.fcs	DRA-11152022_read8	15	0.00128 uM	0.00128	1	8	1	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.00128 uM.fcs
+2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0064 uM.fcs	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0064 uM.fcs	DRA-11152022_read8	16	0.0064 uM	0.0064	1	8	1	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0064 uM.fcs
+2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.032 uM.fcs	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.032 uM.fcs	DRA-11152022_read8	17	0.032 uM	0.032	1	8	1	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.032 uM.fcs
+2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.16 uM.fcs	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.16 uM.fcs	DRA-11152022_read8	18	0.16 uM	0.16	1	8	1	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.16 uM.fcs
+2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.8 uM.fcs	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.8 uM.fcs	DRA-11152022_read8	19	0.8 uM	0.8	1	8	1	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 0.8 uM.fcs
+2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 100 uM.fcs	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 100 uM.fcs	DRA-11152022_read8	20	100 uM	100	1	8	1	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 100 uM.fcs
+2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 20 uM.fcs	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 20 uM.fcs	DRA-11152022_read8	21	20 uM	20	1	8	1	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 20 uM.fcs
+2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 4 uM.fcs	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 4 uM.fcs	DRA-11152022_read8	22	4 uM	4	1	8	1	2Pat-11152022-Biosensors_DRA08_Experiment_yWL209_IAA 4 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0 uM.fcs	DRA-11182022_read16	23	0 uM	0	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.0000102 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.0000102 uM.fcs	DRA-11182022_read16	24	0.0000102 uM	1.02e-05	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.0000102 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.0000512 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.0000512 uM.fcs	DRA-11182022_read16	25	0.0000512 uM	5.12e-05	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.0000512 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.000256 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.000256 uM.fcs	DRA-11182022_read16	26	0.000256 uM	0.000256	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.000256 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.00128 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.00128 uM.fcs	DRA-11182022_read16	27	0.00128 uM	0.00128	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.00128 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.0064 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.0064 uM.fcs	DRA-11182022_read16	28	0.0064 uM	0.0064	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.0064 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.032 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.032 uM.fcs	DRA-11182022_read16	29	0.032 uM	0.032	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.032 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.16 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.16 uM.fcs	DRA-11182022_read16	30	0.16 uM	0.16	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.16 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.8 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.8 uM.fcs	DRA-11182022_read16	31	0.8 uM	0.8	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 0.8 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 100 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 100 uM.fcs	DRA-11182022_read16	32	100 uM	100	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 100 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 20 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 20 uM.fcs	DRA-11182022_read16	33	20 uM	20	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 20 uM.fcs
+3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 4 uM.fcs	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 4 uM.fcs	DRA-11182022_read16	34	4 uM	4	2	16	1	3Pat-11182022-Biosensors_DRA16_Experiment_yWL209_IAA 4 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0 uM.fcs	DRA-11192022_read8	35	0 uM	0	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0000102 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0000102 uM.fcs	DRA-11192022_read8	36	0.0000102 uM	1.02e-05	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0000102 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0000512 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0000512 uM.fcs	DRA-11192022_read8	37	0.0000512 uM	5.12e-05	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0000512 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.000256 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.000256 uM.fcs	DRA-11192022_read8	38	0.000256 uM	0.000256	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.000256 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.00128 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.00128 uM.fcs	DRA-11192022_read8	39	0.00128 uM	0.00128	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.00128 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0064 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0064 uM.fcs	DRA-11192022_read8	40	0.0064 uM	0.0064	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.0064 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.032 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.032 uM.fcs	DRA-11192022_read8	41	0.032 uM	0.032	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.032 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.16 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.16 uM.fcs	DRA-11192022_read8	42	0.16 uM	0.16	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.16 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.8 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.8 uM.fcs	DRA-11192022_read8	43	0.8 uM	0.8	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 0.8 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 100 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 100 uM.fcs	DRA-11192022_read8	44	100 uM	100	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 100 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 20 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 20 uM.fcs	DRA-11192022_read8	45	20 uM	20	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 20 uM.fcs
+4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 4 uM.fcs	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 4 uM.fcs	DRA-11192022_read8	46	4 uM	4	3	8	1	4Pat-11192022-Biosensors_DRA08_Experiment_yWL209_IAA 4 uM.fcs

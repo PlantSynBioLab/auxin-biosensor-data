@@ -1,0 +1,54 @@
+#name: Name
+#X: NA
+#strain: NA
+#treatment: NA
+#FCS_File: NA
+name	X	strain	treatment	FCS_File
+A01.fcs	A01.fcs	1	wild	DMSO	A01.fcs
+A02.fcs	A02.fcs	2	wild	IAA	A02.fcs
+A03.fcs	A03.fcs	3	mutant	DMSO	A03.fcs
+A04.fcs	A04.fcs	4	mutant	IAA	A04.fcs
+A05.fcs	A05.fcs	5	wild	DMSO	A05.fcs
+A06.fcs	A06.fcs	6	wild	IAA	A06.fcs
+A07.fcs	A07.fcs	7	mutant	DMSO	A07.fcs
+A08.fcs	A08.fcs	8	mutant	IAA	A08.fcs
+A09.fcs	A09.fcs	9	wild	DMSO	A09.fcs
+A10.fcs	A10.fcs	10	wild	IAA	A10.fcs
+A11.fcs	A11.fcs	11	mutant	DMSO	A11.fcs
+A12.fcs	A12.fcs	12	mutant	IAA	A12.fcs
+B01.fcs	B01.fcs	13	wild	DMSO	B01.fcs
+B02.fcs	B02.fcs	14	wild	IAA	B02.fcs
+B03.fcs	B03.fcs	15	mutant	DMSO	B03.fcs
+B04.fcs	B04.fcs	16	mutant	IAA	B04.fcs
+B05.fcs	B05.fcs	17	wild	DMSO	B05.fcs
+B06.fcs	B06.fcs	18	wild	IAA	B06.fcs
+B07.fcs	B07.fcs	19	mutant	DMSO	B07.fcs
+B08.fcs	B08.fcs	20	mutant	IAA	B08.fcs
+B09.fcs	B09.fcs	21	wild	DMSO	B09.fcs
+B10.fcs	B10.fcs	22	wild	IAA	B10.fcs
+B11.fcs	B11.fcs	23	mutant	DMSO	B11.fcs
+B12.fcs	B12.fcs	24	mutant	IAA	B12.fcs
+C09.fcs	C09.fcs	25	wild	DMSO	C09.fcs
+C10.fcs	C10.fcs	26	wild	IAA	C10.fcs
+C11.fcs	C11.fcs	27	mutant	DMSO	C11.fcs
+C12.fcs	C12.fcs	28	mutant	IAA	C12.fcs
+D01.fcs	D01.fcs	29	wild	DMSO	D01.fcs
+D02.fcs	D02.fcs	30	wild	IAA	D02.fcs
+D03.fcs	D03.fcs	31	mutant	DMSO	D03.fcs
+D04.fcs	D04.fcs	32	mutant	IAA	D04.fcs
+D05.fcs	D05.fcs	33	wild	DMSO	D05.fcs
+D06.fcs	D06.fcs	34	wild	IAA	D06.fcs
+D07.fcs	D07.fcs	35	mutant	DMSO	D07.fcs
+D08.fcs	D08.fcs	36	mutant	IAA	D08.fcs
+D09.fcs	D09.fcs	37	wild	DMSO	D09.fcs
+D10.fcs	D10.fcs	38	wild	IAA	D10.fcs
+D11.fcs	D11.fcs	39	mutant	DMSO	D11.fcs
+D12.fcs	D12.fcs	40	mutant	IAA	D12.fcs
+E01.fcs	E01.fcs	41	wild	DMSO	E01.fcs
+E02.fcs	E02.fcs	42	wild	IAA	E02.fcs
+E03.fcs	E03.fcs	43	mutant	DMSO	E03.fcs
+E04.fcs	E04.fcs	44	mutant	IAA	E04.fcs
+E05.fcs	E05.fcs	45	wild	DMSO	E05.fcs
+E06.fcs	E06.fcs	46	wild	IAA	E06.fcs
+E07.fcs	E07.fcs	47	mutant	DMSO	E07.fcs
+E08.fcs	E08.fcs	48	mutant	IAA	E08.fcs

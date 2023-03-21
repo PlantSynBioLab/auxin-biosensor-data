@@ -1,0 +1,28 @@
+#name: Name
+#folder: NA
+#strain: NA
+#treatment: NA
+#treat: NA
+#FCS_File: NA
+name	folder	strain	treatment	treat	FCS_File
+1D07.fcs	1D07.fcs	20210626_123714	W303 ratiometric sensor AFB2 in trans	1000 events/uL aerobic	aerobic early stationary phase	1D07.fcs
+1D08.fcs	1D08.fcs	20210626_123714	W303 ratiometric sensor AFB2 in cis	1000 events/uL aerobic	aerobic early stationary phase	1D08.fcs
+1D09.fcs	1D09.fcs	20210626_123714	YPH499 ratiometric sensor AFB2 in cis	1000 events/uL aerobic	aerobic early stationary phase	1D09.fcs
+1D10.fcs	1D10.fcs	20210626_123714	W303 ratiometric sensor AFB2 in trans	1000 events/uL anaerobic	anaerobic late stationary phase	1D10.fcs
+1D11.fcs	1D11.fcs	20210626_123714	W303 ratiometric sensor AFB2 in cis	1000 events/uL anaerobic	anaerobic late stationary phase	1D11.fcs
+1D12.fcs	1D12.fcs	20210626_123714	YPH499 ratiometric sensor AFB2 in cis	1000 events/uL anaerobic	anaerobic late stationary phase	1D12.fcs
+1E01.fcs	1E01.fcs	20210626_123714	W303 ratiometric sensor AFB2 in trans	from previous day, aerobic, EtOH	aerobic late stationary phase	1E01.fcs
+1E02.fcs	1E02.fcs	20210626_123714	W303 ratiometric sensor AFB2 in cis	from previous day, aerobic, EtOH	aerobic late stationary phase	1E02.fcs
+1E03.fcs	1E03.fcs	20210626_123714	YPH499 ratiometric sensor AFB2 in cis	from previous day, aerobic, EtOH	aerobic late stationary phase	1E03.fcs
+1E04.fcs	1E04.fcs	20210626_123714	W303 ratiometric sensor AFB2 in trans	from previous day, aerobic, auxin	aerobic late stationary phase	1E04.fcs
+1E05.fcs	1E05.fcs	20210626_123714	W303 ratiometric sensor AFB2 in cis	from previous day, aerobic, auxin	aerobic late stationary phase	1E05.fcs
+1E06.fcs	1E06.fcs	20210626_123714	YPH499 ratiometric sensor AFB2 in cis	from previous day, aerobic, auxin	aerobic late stationary phase	1E06.fcs
+1E07.fcs	1E07.fcs	20210626_123714	W303 ratiometric sensor AFB2 in trans	1 event/uL aerobic	aerobic exponential phase	1E07.fcs
+1E08.fcs	1E08.fcs	20210626_123714	W303 ratiometric sensor AFB2 in cis	1 event/uL aerobic	aerobic exponential phase	1E08.fcs
+1E09.fcs	1E09.fcs	20210626_123714	YPH499 ratiometric sensor AFB2 in cis	1 event/uL aerobic	aerobic exponential phase	1E09.fcs
+1E10.fcs	1E10.fcs	20210626_123714	W303 ratiometric sensor AFB2 in trans	1 event/uL aerobic	aerobic exponential phase	1E10.fcs
+1E11.fcs	1E11.fcs	20210626_123714	W303 ratiometric sensor AFB2 in cis	1 event/uL aerobic	aerobic exponential phase	1E11.fcs
+1E12.fcs	1E12.fcs	20210626_123714	YPH499 ratiometric sensor AFB2 in cis	1 event/uL aerobic	aerobic exponential phase	1E12.fcs
+1F01.fcs	1F01.fcs	20210626_123714	W303 ratiometric sensor AFB2 in trans	from previous day, anaerobic, EtOH	anaerobic early stationary phase	1F01.fcs
+1F02.fcs	1F02.fcs	20210626_123714	W303 ratiometric sensor AFB2 in cis	from previous day, anaerobic, EtOH	anaerobic early stationary phase	1F02.fcs
+1F03.fcs	1F03.fcs	20210626_123714	YPH499 ratiometric sensor AFB2 in cis	from previous day, anaerobic, EtOH	anaerobic early stationary phase	1F03.fcs

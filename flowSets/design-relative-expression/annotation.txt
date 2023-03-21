@@ -1,0 +1,122 @@
+#name: Name
+#folder: NA
+#X: NA
+#strain: NA
+#treatment: NA
+#reading: NA
+#before_after: NA
+#design_construct: NA
+#FCS_File: NA
+name	folder	X	strain	treatment	reading	before_after	design_construct	FCS_File
+1B01.fcs	1B01.fcs	r02	1	yWL161	Control EtOH	2	before	TIR1 trans	1B01.fcs
+1B02.fcs	1B02.fcs	r02	2	yWL162	Control EtOH	2	before	AFB2 trans	1B02.fcs
+1B03.fcs	1B03.fcs	r02	3	yWL185	Control EtOH	2	before	TIR1 cis	1B03.fcs
+1B04.fcs	1B04.fcs	r02	4	yWL186	Control EtOH	2	before	AFB2 cis	1B04.fcs
+1B07.fcs	1B07.fcs	r02	5	yWL161	Auxin	2	before	TIR1 trans	1B07.fcs
+1B08.fcs	1B08.fcs	r02	6	yWL162	Auxin	2	before	AFB2 trans	1B08.fcs
+1B09.fcs	1B09.fcs	r02	7	yWL185	Auxin	2	before	TIR1 cis	1B09.fcs
+1B10.fcs	1B10.fcs	r02	8	yWL186	Auxin	2	before	AFB2 cis	1B10.fcs
+2C01.fcs	2C01.fcs	r03	9	yWL161	Control EtOH	3	before	TIR1 trans	2C01.fcs
+2C02.fcs	2C02.fcs	r03	10	yWL162	Control EtOH	3	before	AFB2 trans	2C02.fcs
+2C03.fcs	2C03.fcs	r03	11	yWL185	Control EtOH	3	before	TIR1 cis	2C03.fcs
+2C04.fcs	2C04.fcs	r03	12	yWL186	Control EtOH	3	before	AFB2 cis	2C04.fcs
+2C07.fcs	2C07.fcs	r03	13	yWL161	Auxin	3	before	TIR1 trans	2C07.fcs
+2C08.fcs	2C08.fcs	r03	14	yWL162	Auxin	3	before	AFB2 trans	2C08.fcs
+2C09.fcs	2C09.fcs	r03	15	yWL185	Auxin	3	before	TIR1 cis	2C09.fcs
+2C10.fcs	2C10.fcs	r03	16	yWL186	Auxin	3	before	AFB2 cis	2C10.fcs
+3D01.fcs	3D01.fcs	r04	17	yWL161	Control EtOH	4	before	TIR1 trans	3D01.fcs
+3D02.fcs	3D02.fcs	r04	18	yWL162	Control EtOH	4	before	AFB2 trans	3D02.fcs
+3D03.fcs	3D03.fcs	r04	19	yWL185	Control EtOH	4	before	TIR1 cis	3D03.fcs
+3D04.fcs	3D04.fcs	r04	20	yWL186	Control EtOH	4	before	AFB2 cis	3D04.fcs
+3D07.fcs	3D07.fcs	r04	21	yWL161	Auxin	4	before	TIR1 trans	3D07.fcs
+3D08.fcs	3D08.fcs	r04	22	yWL162	Auxin	4	before	AFB2 trans	3D08.fcs
+3D09.fcs	3D09.fcs	r04	23	yWL185	Auxin	4	before	TIR1 cis	3D09.fcs
+3D10.fcs	3D10.fcs	r04	24	yWL186	Auxin	4	before	AFB2 cis	3D10.fcs
+4E01.fcs	4E01.fcs	r05	25	yWL161	Control EtOH	5	after	TIR1 trans	4E01.fcs
+4E02.fcs	4E02.fcs	r05	26	yWL162	Control EtOH	5	after	AFB2 trans	4E02.fcs
+4E03.fcs	4E03.fcs	r05	27	yWL185	Control EtOH	5	after	TIR1 cis	4E03.fcs
+4E04.fcs	4E04.fcs	r05	28	yWL186	Control EtOH	5	after	AFB2 cis	4E04.fcs
+4E07.fcs	4E07.fcs	r05	29	yWL161	Auxin	5	after	TIR1 trans	4E07.fcs
+4E08.fcs	4E08.fcs	r05	30	yWL162	Auxin	5	after	AFB2 trans	4E08.fcs
+4E09.fcs	4E09.fcs	r05	31	yWL185	Auxin	5	after	TIR1 cis	4E09.fcs
+4E10.fcs	4E10.fcs	r05	32	yWL186	Auxin	5	after	AFB2 cis	4E10.fcs
+5F01.fcs	5F01.fcs	r06	33	yWL161	Control EtOH	6	after	TIR1 trans	5F01.fcs
+5F02.fcs	5F02.fcs	r06	34	yWL162	Control EtOH	6	after	AFB2 trans	5F02.fcs
+5F03.fcs	5F03.fcs	r06	35	yWL185	Control EtOH	6	after	TIR1 cis	5F03.fcs
+5F04.fcs	5F04.fcs	r06	36	yWL186	Control EtOH	6	after	AFB2 cis	5F04.fcs
+5F07.fcs	5F07.fcs	r06	37	yWL161	Auxin	6	after	TIR1 trans	5F07.fcs
+5F08.fcs	5F08.fcs	r06	38	yWL162	Auxin	6	after	AFB2 trans	5F08.fcs
+5F09.fcs	5F09.fcs	r06	39	yWL185	Auxin	6	after	TIR1 cis	5F09.fcs
+5F10.fcs	5F10.fcs	r06	40	yWL186	Auxin	6	after	AFB2 cis	5F10.fcs
+6G01.fcs	6G01.fcs	r07	41	yWL161	Control EtOH	7	after	TIR1 trans	6G01.fcs
+6G02.fcs	6G02.fcs	r07	42	yWL162	Control EtOH	7	after	AFB2 trans	6G02.fcs
+6G03.fcs	6G03.fcs	r07	43	yWL185	Control EtOH	7	after	TIR1 cis	6G03.fcs
+6G04.fcs	6G04.fcs	r07	44	yWL186	Control EtOH	7	after	AFB2 cis	6G04.fcs
+6G07.fcs	6G07.fcs	r07	45	yWL161	Auxin	7	after	TIR1 trans	6G07.fcs
+6G08.fcs	6G08.fcs	r07	46	yWL162	Auxin	7	after	AFB2 trans	6G08.fcs
+6G09.fcs	6G09.fcs	r07	47	yWL185	Auxin	7	after	TIR1 cis	6G09.fcs
+6G10.fcs	6G10.fcs	r07	48	yWL186	Auxin	7	after	AFB2 cis	6G10.fcs
+7H01.fcs	7H01.fcs	r08	49	yWL161	Control EtOH	8	after	TIR1 trans	7H01.fcs
+7H02.fcs	7H02.fcs	r08	50	yWL162	Control EtOH	8	after	AFB2 trans	7H02.fcs
+7H03.fcs	7H03.fcs	r08	51	yWL185	Control EtOH	8	after	TIR1 cis	7H03.fcs
+7H04.fcs	7H04.fcs	r08	52	yWL186	Control EtOH	8	after	AFB2 cis	7H04.fcs
+7H07.fcs	7H07.fcs	r08	53	yWL161	Auxin	8	after	TIR1 trans	7H07.fcs
+7H08.fcs	7H08.fcs	r08	54	yWL162	Auxin	8	after	AFB2 trans	7H08.fcs
+7H09.fcs	7H09.fcs	r08	55	yWL185	Auxin	8	after	TIR1 cis	7H09.fcs
+7H10.fcs	7H10.fcs	r08	56	yWL186	Auxin	8	after	AFB2 cis	7H10.fcs
+8I01.fcs	8I01.fcs	r09	57	yWL161	Control EtOH	9	after	TIR1 trans	8I01.fcs
+8I02.fcs	8I02.fcs	r09	58	yWL162	Control EtOH	9	after	AFB2 trans	8I02.fcs
+8I03.fcs	8I03.fcs	r09	59	yWL185	Control EtOH	9	after	TIR1 cis	8I03.fcs
+8I04.fcs	8I04.fcs	r09	60	yWL186	Control EtOH	9	after	AFB2 cis	8I04.fcs
+8I07.fcs	8I07.fcs	r09	61	yWL161	Auxin	9	after	TIR1 trans	8I07.fcs
+8I08.fcs	8I08.fcs	r09	62	yWL162	Auxin	9	after	AFB2 trans	8I08.fcs
+8I09.fcs	8I09.fcs	r09	63	yWL185	Auxin	9	after	TIR1 cis	8I09.fcs
+8I10.fcs	8I10.fcs	r09	64	yWL186	Auxin	9	after	AFB2 cis	8I10.fcs
+9J01.fcs	9J01.fcs	r10	65	yWL161	Control EtOH	10	after	TIR1 trans	9J01.fcs
+9J02.fcs	9J02.fcs	r10	66	yWL162	Control EtOH	10	after	AFB2 trans	9J02.fcs
+9J03.fcs	9J03.fcs	r10	67	yWL185	Control EtOH	10	after	TIR1 cis	9J03.fcs
+9J04.fcs	9J04.fcs	r10	68	yWL186	Control EtOH	10	after	AFB2 cis	9J04.fcs
+9J07.fcs	9J07.fcs	r10	69	yWL161	Auxin	10	after	TIR1 trans	9J07.fcs
+9J08.fcs	9J08.fcs	r10	70	yWL162	Auxin	10	after	AFB2 trans	9J08.fcs
+9J09.fcs	9J09.fcs	r10	71	yWL185	Auxin	10	after	TIR1 cis	9J09.fcs
+9J10.fcs	9J10.fcs	r10	72	yWL186	Auxin	10	after	AFB2 cis	9J10.fcs
+10K01.fcs	10K01.fcs	r11	73	yWL161	Control EtOH	11	after	TIR1 trans	10K01.fcs
+10K02.fcs	10K02.fcs	r11	74	yWL162	Control EtOH	11	after	AFB2 trans	10K02.fcs
+10K03.fcs	10K03.fcs	r11	75	yWL185	Control EtOH	11	after	TIR1 cis	10K03.fcs
+10K04.fcs	10K04.fcs	r11	76	yWL186	Control EtOH	11	after	AFB2 cis	10K04.fcs
+10K07.fcs	10K07.fcs	r11	77	yWL161	Auxin	11	after	TIR1 trans	10K07.fcs
+10K08.fcs	10K08.fcs	r11	78	yWL162	Auxin	11	after	AFB2 trans	10K08.fcs
+10K09.fcs	10K09.fcs	r11	79	yWL185	Auxin	11	after	TIR1 cis	10K09.fcs
+10K10.fcs	10K10.fcs	r11	80	yWL186	Auxin	11	after	AFB2 cis	10K10.fcs
+11L01.fcs	11L01.fcs	r12	81	yWL161	Control EtOH	12	after	TIR1 trans	11L01.fcs
+11L02.fcs	11L02.fcs	r12	82	yWL162	Control EtOH	12	after	AFB2 trans	11L02.fcs
+11L03.fcs	11L03.fcs	r12	83	yWL185	Control EtOH	12	after	TIR1 cis	11L03.fcs
+11L04.fcs	11L04.fcs	r12	84	yWL186	Control EtOH	12	after	AFB2 cis	11L04.fcs
+11L07.fcs	11L07.fcs	r12	85	yWL161	Auxin	12	after	TIR1 trans	11L07.fcs
+11L08.fcs	11L08.fcs	r12	86	yWL162	Auxin	12	after	AFB2 trans	11L08.fcs
+11L09.fcs	11L09.fcs	r12	87	yWL185	Auxin	12	after	TIR1 cis	11L09.fcs
+11L10.fcs	11L10.fcs	r12	88	yWL186	Auxin	12	after	AFB2 cis	11L10.fcs
+12M01.fcs	12M01.fcs	r13	89	yWL161	Control EtOH	13	after	TIR1 trans	12M01.fcs
+12M02.fcs	12M02.fcs	r13	90	yWL162	Control EtOH	13	after	AFB2 trans	12M02.fcs
+12M03.fcs	12M03.fcs	r13	91	yWL185	Control EtOH	13	after	TIR1 cis	12M03.fcs
+12M04.fcs	12M04.fcs	r13	92	yWL186	Control EtOH	13	after	AFB2 cis	12M04.fcs
+12M07.fcs	12M07.fcs	r13	93	yWL161	Auxin	13	after	TIR1 trans	12M07.fcs
+12M08.fcs	12M08.fcs	r13	94	yWL162	Auxin	13	after	AFB2 trans	12M08.fcs
+12M09.fcs	12M09.fcs	r13	95	yWL185	Auxin	13	after	TIR1 cis	12M09.fcs
+12M10.fcs	12M10.fcs	r13	96	yWL186	Auxin	13	after	AFB2 cis	12M10.fcs
+13N01.fcs	13N01.fcs	r14	97	yWL161	Control EtOH	14	after	TIR1 trans	13N01.fcs
+13N02.fcs	13N02.fcs	r14	98	yWL162	Control EtOH	14	after	AFB2 trans	13N02.fcs
+13N03.fcs	13N03.fcs	r14	99	yWL185	Control EtOH	14	after	TIR1 cis	13N03.fcs
+13N04.fcs	13N04.fcs	r14	100	yWL186	Control EtOH	14	after	AFB2 cis	13N04.fcs
+13N07.fcs	13N07.fcs	r14	101	yWL161	Auxin	14	after	TIR1 trans	13N07.fcs
+13N08.fcs	13N08.fcs	r14	102	yWL162	Auxin	14	after	AFB2 trans	13N08.fcs
+13N09.fcs	13N09.fcs	r14	103	yWL185	Auxin	14	after	TIR1 cis	13N09.fcs
+13N10.fcs	13N10.fcs	r14	104	yWL186	Auxin	14	after	AFB2 cis	13N10.fcs
+14O01.fcs	14O01.fcs	r15	105	yWL161	Control EtOH	15	after	TIR1 trans	14O01.fcs
+14O02.fcs	14O02.fcs	r15	106	yWL162	Control EtOH	15	after	AFB2 trans	14O02.fcs
+14O03.fcs	14O03.fcs	r15	107	yWL185	Control EtOH	15	after	TIR1 cis	14O03.fcs
+14O04.fcs	14O04.fcs	r15	108	yWL186	Control EtOH	15	after	AFB2 cis	14O04.fcs
+14O07.fcs	14O07.fcs	r15	109	yWL161	Auxin	15	after	TIR1 trans	14O07.fcs
+14O08.fcs	14O08.fcs	r15	110	yWL162	Auxin	15	after	AFB2 trans	14O08.fcs
+14O09.fcs	14O09.fcs	r15	111	yWL185	Auxin	15	after	TIR1 cis	14O09.fcs
+14O10.fcs	14O10.fcs	r15	112	yWL186	Auxin	15	after	AFB2 cis	14O10.fcs
